@@ -1,0 +1,26 @@
+Wymagania funkcjonalne
+1. Zarządzanie użytkownikami
+✅ Rejestracja i logowanie użytkowników (uczeń, korepetytor, admin)
+✅ Uwierzytelnianie i autoryzacja (ASP.NET Identity)
+✅ Edycja profilu użytkownika
+
+2. Zarządzanie lekcjami
+✅ Korepetytor dodaje dostępne terminy zajęć
+✅ Uczeń rezerwuje lekcję
+✅ Lista nadchodzących i odbytych lekcji
+
+3. Komunikacja
+✅ Czat tekstowy (SignalR) między uczniem a korepetytorem
+
+4. System ocen
+✅ Uczeń ocenia korepetytora po lekcji
+
+5. Panel admina
+✅ Admin zarządza użytkownikami i lekcjami
+
+Wymagania niefunkcjonalne
+✅ Technologie: ASP.NET Core Web API + Angular + MS SQL
+✅ Bezpieczeństwo: JWT do autoryzacji
+✅ Prosty interfejs – responsywność, podstawowe UI w Bootstrap
+✅ Łatwa konfiguracja – lokalna baza MS SQL
+
