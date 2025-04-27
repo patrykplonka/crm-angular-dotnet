@@ -8,7 +8,8 @@ import { LoginModel } from '../../models/login.model';
   selector: 'app-login',
   standalone: true,
   imports: [FormsModule, RouterModule],
-  templateUrl: './login.component.html'
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
   model: LoginModel = { email: '', password: '' };
@@ -19,9 +20,9 @@ export class LoginComponent {
     this.authService.login(this.model).subscribe({
       next: (res) => {
         localStorage.setItem('token', res.token);
-        alert('Login successful');
+        alert('Zalogowano!');
       },
-      error: (err) => alert('Login failed: ' + err.message)
+      error: (err) => alert('Próba logowania zakończona niepowodzeniem: ' + err.message)
     });
   }
 }

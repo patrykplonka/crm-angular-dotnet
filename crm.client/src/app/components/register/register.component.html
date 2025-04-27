@@ -1,31 +1,33 @@
-<div class="container mt-5">
-  <h2>Rejestracja</h2>
-  <form (ngSubmit)="register()" class="form">
-    <div class="mb-3">
-      <label class="form-label">Imię</label>
-      <input [(ngModel)]="model.firstName" name="firstName" type="text" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Nazwisko</label>
-      <input [(ngModel)]="model.lastName" name="lastName" type="text" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Email</label>
-      <input [(ngModel)]="model.email" name="email" type="email" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Hasło</label>
-      <input [(ngModel)]="model.password" name="password" type="password" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Rola</label>
-      <select [(ngModel)]="model.role" name="role" class="form-control" required>
-        <option value="Student">Student</option>
-        <option value="Tutor">Tutor</option>
-        <option value="Admin">Admin</option>
-      </select>
-    </div>
-    <button type="submit" class="btn btn-primary">Zarejestruj</button>
-    <button type="button" routerLink="/login" class="btn btn-link">Wróć do logowania</button>
-  </form>
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>Rejestracja</h2>
+    <form (ngSubmit)="register()" class="auth-form">
+      <div class="form-group">
+        <label class="form-label">Imię</label>
+        <input [(ngModel)]="model.firstName" name="FirstName" type="text" class="form-control" required placeholder="Wprowadź imię">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nazwisko</label>
+        <input [(ngModel)]="model.lastName" name="LastName" type="text" class="form-control" required placeholder="Wprowadź nazwisko">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input [(ngModel)]="model.email" name="Email" type="email" class="form-control" required placeholder="Wprowadź email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hasło</label>
+        <input [(ngModel)]="model.password" name="Password" type="password" class="form-control" required placeholder="Wprowadź hasło">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rola</label>
+        <select [(ngModel)]="model.role" name="Role" class="form-control" required>
+          <option value="Student">Student</option>
+          <option value="Tutor">Korepetytor</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Zarejestruj</button>
+      <button type="button" routerLink="/login" class="btn btn-link">Wróć do logowania</button>
+    </form>
+  </div>
 </div>
