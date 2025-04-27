@@ -7,7 +7,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-
 namespace TutoringCRM.Backend.Controllers
 {
     [Route("api/[controller]")]
@@ -28,6 +27,14 @@ namespace TutoringCRM.Backend.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto model)
         {
+            Console.WriteLine($"Register request: {System.Text.Json.JsonSerializer.Serialize(model)}");
+            if (!ModelState.IsValid)
+            {
+                var modelStateErrors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                Console.WriteLine($"ModelState errors: {string.Join(", ", modelStateErrors)}");
+                return BadRequest(new { Errors = modelStateErrors });
+            }
+
             var user = new ApplicationUser
             {
                 UserName = model.Email,
@@ -40,10 +47,26 @@ namespace TutoringCRM.Backend.Controllers
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                await _userManager.AddToRoleAsync(user, model.Role);
-                return Ok(new { Message = "User registered" });
+                // Sprawdź, czy użytkownik ma już przypisaną rolę
+                var isInRole = await _userManager.IsInRoleAsync(user, model.Role);
+                if (!isInRole)
+                {
+                    var roleResult = await _userManager.AddToRoleAsync(user, model.Role);
+                    if (!roleResult.Succeeded)
+                    {
+                        var roleErrors = roleResult.Errors.Select(e => e.Description).ToList();
+                        Console.WriteLine($"Role assignment errors: {string.Join(", ", roleErrors)}");
+                        return BadRequest(new { Errors = roleErrors });
+                    }
+                }
+
+                Console.WriteLine($"User {user.Email} registered with role {model.Role}");
+                return Ok(new { Message = "User registered successfully" });
             }
-            return BadRequest(result.Errors);
+
+            var identityErrors = result.Errors.Select(e => e.Description).ToList();
+            Console.WriteLine($"Identity errors: {string.Join(", ", identityErrors)}");
+            return BadRequest(new { Errors = identityErrors });
         }
 
         [HttpPost("login")]
@@ -56,7 +79,7 @@ namespace TutoringCRM.Backend.Controllers
                 var token = GenerateJwtToken(user);
                 return Ok(new { Token = token });
             }
-            return Unauthorized();
+            return Unauthorized(new { Errors = new[] { "Invalid login attempt" } });
         }
 
         private string GenerateJwtToken(ApplicationUser user)
