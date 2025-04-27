@@ -6,8 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using crm.Server.Models;
-using crm.Server.Models.Dto;
+
 
 namespace TutoringCRM.Backend.Controllers
 {
