@@ -9,13 +9,7 @@ Wymagania funkcjonalne
 ✅ Uczeń rezerwuje lekcję
 ✅ Lista nadchodzących i odbytych lekcji
 
-3. Komunikacja
-✅ Czat tekstowy (SignalR) między uczniem a korepetytorem
-
-4. System ocen
-✅ Uczeń ocenia korepetytora po lekcji
-
-5. Panel admina
+3. Panel admina
 ✅ Admin zarządza użytkownikami i lekcjami
 
 Wymagania niefunkcjonalne
