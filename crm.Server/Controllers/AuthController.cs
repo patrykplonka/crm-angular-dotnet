@@ -47,7 +47,6 @@ namespace TutoringCRM.Backend.Controllers
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                // Sprawdź, czy użytkownik ma już przypisaną rolę
                 var isInRole = await _userManager.IsInRoleAsync(user, model.Role);
                 if (!isInRole)
                 {
@@ -72,13 +71,16 @@ namespace TutoringCRM.Backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto model)
         {
+            Console.WriteLine($"Login request: Email={model.Email}");
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
                 var token = GenerateJwtToken(user);
+                Console.WriteLine($"Login successful for {user.Email}");
                 return Ok(new { Token = token });
             }
+            Console.WriteLine($"Login failed for {model.Email}");
             return Unauthorized(new { Errors = new[] { "Invalid login attempt" } });
         }
 
