@@ -9,7 +9,7 @@ using crm.Server.Models.Dto;
 
 namespace crm.Server.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/courses")]
     [ApiController]
     public class CourseController : ControllerBase
     {
@@ -35,6 +35,29 @@ namespace crm.Server.Controllers
             return Ok(courseDtos);
         }
 
+        [HttpPost]
+        public async Task<ActionResult<CourseDto>> AddCourse([FromBody] CourseDto courseDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var course = new Course
+            {
+                Id = Guid.NewGuid().ToString(),
+                Title = courseDto.Title,
+                Description = courseDto.Description,
+                Instructor = courseDto.Instructor,
+                DurationHours = courseDto.DurationHours
+            };
+
+            _context.Courses.Add(course);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetCourses), new { id = course.Id }, courseDto);
+        }
+
         [HttpPost("{id}/enroll")]
         public async Task<IActionResult> Enroll(string id, [FromBody] EnrollRequest request)
         {
@@ -43,7 +66,25 @@ namespace crm.Server.Controllers
             // Logika zapisu/wypisu użytkownika może być dodana tutaj
             return Ok();
         }
+
+        [HttpGet("test")]
+        public IActionResult Test() => Ok("CourseController is working");
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCourse(string id)
+        {
+            var course = await _context.Courses.FindAsync(id);
+            if (course == null)
+            {
+                return NotFound();
+            }
+
+            _context.Courses.Remove(course);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
     }
+
 
     public class EnrollRequest
     {

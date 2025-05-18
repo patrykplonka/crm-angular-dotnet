@@ -3,8 +3,13 @@
   <div class="course-content">
     <h2>Zarządzanie Kursami</h2>
 
-    <!-- Formularz dodawania kursu -->
-    <div class="add-course-form">
+    <div class="form-toggle">
+      <button class="btn btn-primary" (click)="toggleForm()">
+        {{ showForm ? 'Ukryj formularz' : 'Dodaj kurs' }}
+      </button>
+    </div>
+
+    <div class="add-course-form" [class.visible]="showForm">
       <h3>Dodaj nowy kurs</h3>
       <form (ngSubmit)="addCourse()">
         <div class="form-group">
@@ -23,11 +28,13 @@
           <label for="duration">Czas trwania (godziny)</label>
           <input id="duration" type="number" [(ngModel)]="newCourse.durationHours" name="durationHours" required placeholder="Wprowadź czas trwania">
         </div>
-        <button type="submit" class="btn btn-primary">Dodaj kurs</button>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Dodaj kurs</button>
+          <button type="button" class="btn btn-cancel" (click)="toggleForm()">Anuluj</button>
+        </div>
       </form>
     </div>
 
-    <!-- Lista kursów -->
     <div class="course-list">
       <div *ngFor="let course of courses" class="course-item">
         <h3>{{ course.title }}</h3>

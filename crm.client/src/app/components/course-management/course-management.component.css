@@ -20,13 +20,30 @@ h2 {
   text-align: center;
 }
 
+.form-toggle {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
 .add-course-form {
   background: white;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 40px;
+  height: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
+
+  .add-course-form.visible {
+    height: auto;
+    min-height: 400px; /* Adjust based on form content */
+    opacity: 1;
+    visibility: visible;
+  }
 
   .add-course-form h3 {
     color: #343a40;
@@ -66,6 +83,11 @@ h2 {
     min-height: 100px;
   }
 
+.form-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .btn {
   padding: 10px 20px;
   border: none;
@@ -82,6 +104,16 @@ h2 {
 
   .btn-primary:hover {
     background: #0056b3;
+    transform: translateY(-2px);
+  }
+
+.btn-cancel {
+  background: #6c757d;
+  color: white;
+}
+
+  .btn-cancel:hover {
+    background: #5a6268;
     transform: translateY(-2px);
   }
 
@@ -157,4 +189,8 @@ h2 {
   .add-course-form {
     padding: 15px;
   }
+
+    .add-course-form.visible {
+      min-height: 500px; /* Adjust for smaller screens */
+    }
 }
