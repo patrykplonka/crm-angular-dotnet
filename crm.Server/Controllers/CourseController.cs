@@ -3,12 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ElearningCrm.Models;
-using ElearningCrm.Dtos;
+using crm.Server.Models;
 using crm.Server.Data;
 using crm.Server.Models.Dto;
 
-namespace ElearningCrm.Controllers
+namespace crm.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
