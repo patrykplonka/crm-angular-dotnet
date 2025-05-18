@@ -1,0 +1,53 @@
+<div class="course-container">
+  <app-sidebar></app-sidebar>
+  <div class="course-content">
+    <h2>Zarządzanie Kursami</h2>
+
+    <div class="form-toggle">
+      <button class="btn btn-primary" (click)="toggleForm()">
+        {{ showForm ? 'Ukryj formularz' : 'Dodaj kurs' }}
+      </button>
+    </div>
+
+    <div class="add-course-form" [class.visible]="showForm">
+      <h3>Dodaj nowy kurs</h3>
+      <form (ngSubmit)="addCourse()">
+        <div class="form-group">
+          <label for="title">Tytuł</label>
+          <input id="title" [(ngModel)]="newCourse.title" name="title" required placeholder="Wprowadź tytuł kursu">
+        </div>
+        <div class="form-group">
+          <label for="description">Opis</label>
+          <textarea id="description" [(ngModel)]="newCourse.description" name="description" required placeholder="Wprowadź opis kursu"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="instructor">Prowadzący</label>
+          <input id="instructor" [(ngModel)]="newCourse.instructor" name="instructor" placeholder="Wprowadź imię prowadzącego">
+        </div>
+        <div class="form-group">
+          <label for="duration">Czas trwania (godziny)</label>
+          <input id="duration" type="number" [(ngModel)]="newCourse.durationHours" name="durationHours" required placeholder="Wprowadź czas trwania">
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Dodaj kurs</button>
+          <button type="button" class="btn btn-cancel" (click)="toggleForm()">Anuluj</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="course-list">
+      <div *ngFor="let course of courses" class="course-item">
+        <h3>{{ course.title }}</h3>
+        <p>{{ course.description }}</p>
+        <p><strong>Prowadzący:</strong> {{ course.instructor || 'Brak' }}</p>
+        <p><strong>Czas trwania:</strong> {{ course.durationHours }} godzin</p>
+        <div class="course-actions">
+          <button class="btn btn-enroll" (click)="toggleEnrollment(course)">
+            {{ course.enrolled ? 'Wypisz się' : 'Zapisz się' }}
+          </button>
+          <button class="btn btn-delete" (click)="deleteCourse(course.id)">Usuń</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

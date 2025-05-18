@@ -13,6 +13,7 @@ export class SidebarComponent {
   menuItems = [
     { label: 'Dashboard', path: '/dashboard', icon: 'fas fa-home' },
     { label: 'Profil', path: '/profile', icon: 'fas fa-user' },
+    { label: 'Kursy', path: '/courses', icon: 'fas fa-book' },
     { label: 'Ustawienia', path: '/settings', icon: 'fas fa-cog' }
   ];
 }
