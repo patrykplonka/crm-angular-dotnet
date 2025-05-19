@@ -1,0 +1,13 @@
+@if (course) {
+<div class="course-details">
+  <h2>{{ course.title }}</h2>
+  <p><strong>Opis:</strong> {{ course.description }}</p>
+  <p><strong>Prowadzący:</strong> {{ course.instructor || 'Brak' }}</p>
+  <p><strong>Czas trwania:</strong> {{ course.durationHours }} godzin</p>
+  <a routerLink="/courses" class="btn btn-primary">Powrót</a>
+</div>
+} @else {
+<div>
+  <p>Ładowanie kursu...</p>
+</div>
+}
