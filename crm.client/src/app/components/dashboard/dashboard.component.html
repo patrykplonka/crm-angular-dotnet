@@ -1,13 +1,25 @@
-<div class="dashboard-container">
-  <app-sidebar></app-sidebar>
-  <div class="dashboard-content">
-    <header class="dashboard-header">
-      <h1>Witaj w Dashboardzie</h1>
-      <button class="logout-btn" (click)="logout()" routerLink="/login">Wyloguj</button>
-    </header>
-    <main>
+<div class="min-h-screen flex bg-gray-100">
+  <!-- Sidebar -->
+  <app-sidebar class="w-64 bg-white shadow-md hidden md:block"></app-sidebar>
 
-      <p>Twoje dane i funkcjonalności będą tutaj wyświetlane.</p>
+  <!-- Main content -->
+  <div class="flex-1 flex flex-col">
+    <!-- Header -->
+    <header class="bg-white shadow flex justify-between items-center px-6 py-4">
+      <h1 class="text-2xl font-semibold text-gray-800">Witaj w Dashboardzie</h1>
+      <button (click)="logout()"
+              routerLink="/login"
+              class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+        Wyloguj
+      </button>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-1 p-6">
+      <div class="bg-white rounded-xl shadow p-6">
+        <p class="text-gray-600 text-lg">Twoje dane i funkcjonalności będą tutaj wyświetlane.</p>
+      </div>
     </main>
   </div>
 </div>
+

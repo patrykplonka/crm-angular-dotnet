@@ -3,6 +3,8 @@ import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { SettingsComponent } from './components/settings/settings.component';
+import { ProfilComponent } from './profil/profil.component';
 
 @NgModule({
   imports: [
@@ -10,6 +12,10 @@ import { AppComponent } from './app.component';
     HttpClientModule,
     AppRoutingModule
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  declarations: [
+    SettingsComponent,
+    ProfilComponent
+  ]
 })
 export class AppModule { }
