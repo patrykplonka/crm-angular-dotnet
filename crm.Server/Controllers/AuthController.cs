@@ -1,15 +1,17 @@
-﻿using crm.Server.Models.Dto;
-using crm.Server.Models;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using crm.Server.Models.Dto;
+using System.Threading.Tasks;
+using System;
+using crm.Server.Models;
 
-namespace TutoringCRM.Backend.Controllers
+namespace crm.Server.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -17,7 +19,10 @@ namespace TutoringCRM.Backend.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _configuration;
 
-        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration)
+        public AuthController(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -25,84 +30,88 @@ namespace TutoringCRM.Backend.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterDto model)
+        public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-            Console.WriteLine($"Register request: {System.Text.Json.JsonSerializer.Serialize(model)}");
             if (!ModelState.IsValid)
             {
-                var modelStateErrors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                Console.WriteLine($"ModelState errors: {string.Join(", ", modelStateErrors)}");
-                return BadRequest(new { Errors = modelStateErrors });
+                return BadRequest(ModelState);
             }
 
-            var user = new ApplicationUser
+            try
             {
-                UserName = model.Email,
-                Email = model.Email,
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                Role = model.Role
-            };
-
-            var result = await _userManager.CreateAsync(user, model.Password);
-            if (result.Succeeded)
-            {
-                var isInRole = await _userManager.IsInRoleAsync(user, model.Role);
-                if (!isInRole)
+                var user = new ApplicationUser
                 {
-                    var roleResult = await _userManager.AddToRoleAsync(user, model.Role);
-                    if (!roleResult.Succeeded)
-                    {
-                        var roleErrors = roleResult.Errors.Select(e => e.Description).ToList();
-                        Console.WriteLine($"Role assignment errors: {string.Join(", ", roleErrors)}");
-                        return BadRequest(new { Errors = roleErrors });
-                    }
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    Role = model.Role
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+                if (!result.Succeeded)
+                {
+                    return BadRequest(result.Errors);
                 }
 
-                Console.WriteLine($"User {user.Email} registered with role {model.Role}");
-                return Ok(new { Message = "User registered successfully" });
-            }
+                // Dodaj użytkownika do roli
+                if (!string.IsNullOrEmpty(model.Role))
+                {
+                    await _userManager.AddToRoleAsync(user, model.Role);
+                }
 
-            var identityErrors = result.Errors.Select(e => e.Description).ToList();
-            Console.WriteLine($"Identity errors: {string.Join(", ", identityErrors)}");
-            return BadRequest(new { Errors = identityErrors });
+                return Ok(new { Message = "Rejestracja zakończona sukcesem" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Błąd serwera: {ex.Message}");
+            }
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto model)
+        public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
-            Console.WriteLine($"Login request: Email={model.Email}");
-            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
-            if (result.Succeeded)
+            try
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                var token = GenerateJwtToken(user);
-                Console.WriteLine($"Login successful for {user.Email}");
-                return Ok(new { Token = token });
+                if (user == null)
+                {
+                    return Unauthorized("Nieprawidłowy email lub hasło");
+                }
+
+                var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
+                if (!result.Succeeded)
+                {
+                    return Unauthorized("Nieprawidłowy email lub hasło");
+                }
+
+                // Generowanie tokena JWT
+                var claims = new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Name, user.UserName),
+                    new Claim(ClaimTypes.Role, user.Role ?? "User")
+                };
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["Jwt:Issuer"],
+                    audience: _configuration["Jwt:Audience"],
+                    claims: claims,
+                    expires: DateTime.Now.AddDays(1),
+                    signingCredentials: creds);
+
+                return Ok(new
+                {
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    User = new { user.FirstName, user.LastName, user.Email, user.Role }
+                });
             }
-            Console.WriteLine($"Login failed for {model.Email}");
-            return Unauthorized(new { Errors = new[] { "Invalid login attempt" } });
-        }
-
-        private string GenerateJwtToken(ApplicationUser user)
-        {
-            var claims = new[]
+            catch (Exception ex)
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Role, user.Role)
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddDays(1),
-                signingCredentials: creds);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+                return StatusCode(500, $"Błąd serwera: {ex.Message}");
+            }
         }
     }
 }
