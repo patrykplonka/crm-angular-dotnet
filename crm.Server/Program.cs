@@ -8,12 +8,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(crm.Server.Controllers.CourseController).Assembly)
+    .AddApplicationPart(typeof(crm.Server.Controllers.ScheduleController).Assembly); // Dodane dla ScheduleController
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddControllers()
-    .AddApplicationPart(typeof(crm.Server.Controllers.CourseController).Assembly);
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -57,12 +57,10 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddEndpointsApiExplorer();
 
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-
 }
 
 app.UseCors("AllowFrontend");
