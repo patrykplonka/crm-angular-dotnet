@@ -9,5 +9,6 @@ namespace crm.Server.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         public DbSet<Course> Courses { get; set; }
+        public DbSet<ScheduleEvent> ScheduleEvents { get; set; } // Dodane
     }
 }
