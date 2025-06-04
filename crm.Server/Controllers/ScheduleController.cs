@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 using crm.Server.Data;
 using crm.Server.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace crm.Server.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/schedule")]
     [ApiController]
     public class ScheduleController : ControllerBase
     {
@@ -16,42 +17,36 @@ namespace crm.Server.Controllers
             _context = context;
         }
 
-        // Pobierz wszystkie wydarzenia
         [HttpGet]
-        public async Task<IActionResult> GetEvents()
+        public async Task<ActionResult<IEnumerable<ScheduleEvent>>> GetEvents()
         {
-            var events = await _context.ScheduleEvents
-                .Include(e => e.Course)
-                .Include(e => e.User)
-                .ToListAsync();
-            return Ok(events);
+            return await _context.Events.ToListAsync();
         }
 
-        // Dodaj nowe wydarzenie
         [HttpPost]
-        public async Task<IActionResult> AddEvent([FromBody] ScheduleEvent eventData)
+        public async Task<ActionResult<ScheduleEvent>> AddEvent([FromBody] ScheduleEvent scheduleEvent)
         {
-            if (eventData == null || eventData.StartDateTime >= eventData.EndDateTime)
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Invalid event data");
+                return BadRequest(ModelState);
             }
 
-            _context.ScheduleEvents.Add(eventData);
+            _context.Events.Add(scheduleEvent);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetEvents), new { id = eventData.Id }, eventData);
+
+            return CreatedAtAction(nameof(GetEvents), new { id = scheduleEvent.Id }, scheduleEvent);
         }
 
-        // Usuń wydarzenie (opcjonalne)
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEvent(int id)
         {
-            var eventToDelete = await _context.ScheduleEvents.FindAsync(id);
-            if (eventToDelete == null)
+            var eventItem = await _context.Events.FindAsync(id);
+            if (eventItem == null)
             {
                 return NotFound();
             }
 
-            _context.ScheduleEvents.Remove(eventToDelete);
+            _context.Events.Remove(eventItem);
             await _context.SaveChangesAsync();
             return NoContent();
         }

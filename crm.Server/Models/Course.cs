@@ -1,17 +1,20 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
-
-namespace crm.Server.Models
+﻿namespace crm.Server.Models
 {
     public class Course
     {
-        [Key]
-        public string Id { get; set; } = Guid.NewGuid().ToString();
-        [Required]
+        public string Id { get; set; }
         public string Title { get; set; }
-        [Required]
         public string Description { get; set; }
         public string Instructor { get; set; }
         public int DurationHours { get; set; }
+        public List<UserCourse> Enrollments { get; set; } = new List<UserCourse>();
+    }
+
+    public class UserCourse
+    {
+        public string UserId { get; set; }
+        public ApplicationUser User { get; set; }
+        public string CourseId { get; set; }
+        public Course Course { get; set; }
     }
 }

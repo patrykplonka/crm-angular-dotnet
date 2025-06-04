@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using crm.Server.Models;
 using crm.Server.Data;
 using crm.Server.Models.Dto;
+using System.Security.Claims;
 
 namespace crm.Server.Controllers
 {
@@ -63,8 +64,54 @@ namespace crm.Server.Controllers
         {
             var course = await _context.Courses.FindAsync(id);
             if (course == null) return NotFound();
-            // Logika zapisu/wypisu użytkownika może być dodana tutaj
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var enrollment = await _context.UserCourses
+                .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.CourseId == id);
+
+            if (request.Action == "enroll" && enrollment == null)
+            {
+                _context.UserCourses.Add(new UserCourse
+                {
+                    UserId = userId,
+                    CourseId = id
+                });
+            }
+            else if (request.Action == "unenroll" && enrollment != null)
+            {
+                _context.UserCourses.Remove(enrollment);
+            }
+            else
+            {
+                return BadRequest("Invalid action or enrollment state.");
+            }
+
+            await _context.SaveChangesAsync();
             return Ok();
+        }
+
+        [HttpGet("enrolled")]
+        public async Task<ActionResult<List<CourseDto>>> GetEnrolledCourses()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var enrolledCourses = await _context.UserCourses
+                .Where(uc => uc.UserId == userId)
+                .Include(uc => uc.Course)
+                .Select(uc => new CourseDto
+                {
+                    Id = uc.Course.Id,
+                    Title = uc.Course.Title,
+                    Description = uc.Course.Description,
+                    Instructor = uc.Course.Instructor,
+                    DurationHours = uc.Course.DurationHours
+                })
+                .ToListAsync();
+
+            return Ok(enrolledCourses);
         }
 
         [HttpGet("test")]
@@ -85,9 +132,8 @@ namespace crm.Server.Controllers
         }
     }
 
-
     public class EnrollRequest
     {
-        public string Action { get; set; }
+        public string? Action { get; set; }
     }
 }
