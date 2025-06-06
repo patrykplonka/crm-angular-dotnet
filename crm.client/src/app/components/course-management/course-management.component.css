@@ -40,7 +40,7 @@ h2 {
 
   .add-course-form.visible {
     height: auto;
-    min-height: 450px;
+    min-height: 650px;
     opacity: 1;
     visibility: visible;
   }
@@ -81,6 +81,27 @@ h2 {
   .form-group textarea {
     resize: vertical;
     min-height: 100px;
+  }
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+  .checkbox-item input {
+    width: auto;
+  }
+
+  .checkbox-item label {
+    margin: 0;
+    font-weight: normal;
   }
 
 .form-actions {
@@ -182,6 +203,20 @@ h2 {
     transform: translateY(-2px);
   }
 
+.meeting-dates {
+  margin-top: 10px;
+}
+
+  .meeting-dates ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .meeting-dates li {
+    color: #495057;
+    font-size: 0.9rem;
+  }
+
 @media (max-width: 768px) {
   .course-container {
     flex-direction: column;
@@ -200,6 +235,6 @@ h2 {
   }
 
     .add-course-form.visible {
-      min-height: 550px;
+      min-height: 700px;
     }
 }

@@ -14,6 +14,14 @@ export interface Course {
   durationHours: number;
   link: string;
   enrolled: boolean;
+  startDate: Date;
+  endDate?: Date;
+  recurrencePattern?: string;
+  meetingDates: Date[];
+  recurrenceDays: string; // Align with backend CourseDto
+  recurrenceWeeks?: number;
+  startTime?: string;
+  endTime?: string;
 }
 
 @Component({
@@ -32,9 +40,25 @@ export class CourseManagementComponent {
     instructor: '',
     durationHours: 0,
     link: '',
-    enrolled: false
+    enrolled: false,
+    startDate: new Date(),
+    meetingDates: [],
+    recurrenceDays: '',
+    recurrenceWeeks: 1,
+    startTime: '18:00',
+    endTime: '20:00'
   };
   showForm: boolean = false;
+  daysOfWeek: { pl: string; en: string }[] = [
+    { pl: 'Poniedziałek', en: 'Monday' },
+    { pl: 'Wtorek', en: 'Tuesday' },
+    { pl: 'Środa', en: 'Wednesday' },
+    { pl: 'Czwartek', en: 'Thursday' },
+    { pl: 'Piątek', en: 'Friday' },
+    { pl: 'Sobota', en: 'Saturday' },
+    { pl: 'Niedziela', en: 'Sunday' }
+  ];
+  selectedDays: boolean[] = new Array(this.daysOfWeek.length).fill(false); // Checkbox states
 
   constructor(private http: HttpClient, public authService: AuthService) {
     if (this.authService.isLoggedIn()) {
@@ -52,7 +76,13 @@ export class CourseManagementComponent {
   loadCourses() {
     this.http.get<Course[]>('http://localhost:5241/api/courses', { headers: this.getAuthHeaders() }).subscribe({
       next: (data) => {
-        this.courses = data;
+        this.courses = data.map(course => ({
+          ...course,
+          startDate: new Date(course.startDate),
+          endDate: course.endDate ? new Date(course.endDate) : undefined,
+          meetingDates: course.meetingDates.map(d => new Date(d)),
+          recurrenceDays: course.recurrenceDays || ''
+        }));
       },
       error: (err) => {
         console.error('Błąd ładowania kursów:', err.status, err.statusText, err.message);
@@ -70,24 +100,53 @@ export class CourseManagementComponent {
       alert('Brak uprawnień do dodawania kursów!');
       return;
     }
-    if (!this.newCourse.title || !this.newCourse.description || !this.newCourse.durationHours) {
-      alert('Wypełnij wszystkie wymagane pola!');
+    if (!this.newCourse.title || !this.newCourse.description || !this.newCourse.durationHours || !this.selectedDays.some(day => day) || !this.newCourse.startTime || !this.newCourse.endTime || !this.newCourse.recurrenceWeeks) {
+      alert('Wypełnij wszystkie wymagane pola, w tym co najmniej jeden dzień!');
       return;
     }
 
-    this.http.post<Course>('http://localhost:5241/api/courses', this.newCourse, { headers: this.getAuthHeaders() }).subscribe({
+    // Convert selectedDays to comma-separated English day names
+    this.newCourse.recurrenceDays = this.daysOfWeek
+      .filter((_, index) => this.selectedDays[index])
+      .map(day => day.en)
+      .join(',');
+
+    const courseToSend: Course = {
+      ...this.newCourse,
+      recurrenceDays: this.newCourse.recurrenceDays
+    };
+
+    this.http.post<Course>('http://localhost:5241/api/courses', courseToSend, { headers: this.getAuthHeaders() }).subscribe({
       next: (course) => {
-        this.courses.push(course);
+        this.courses.push({
+          ...course,
+          startDate: new Date(course.startDate),
+          endDate: course.endDate ? new Date(course.endDate) : undefined,
+          meetingDates: course.meetingDates.map(d => new Date(d)),
+          recurrenceDays: course.recurrenceDays || ''
+        });
         this.resetForm();
         this.showForm = false;
       },
       error: (err) => {
-        console.error('Błąd dodawania kursu:', err.status, err.statusText, err.message);
-        if (err.status === 403) {
+        console.error('Błąd dodawania kursu:', err.status, err.statusText, err.error);
+        if (err.status === 400) {
+          const errors = err.error?.errors ? Object.values(err.error.errors).flat().join(', ') : err.error?.title || 'Sprawdź poprawność wprowadzonych danych.';
+          alert('Błąd w danych kursu: ' + errors);
+        } else if (err.status === 403) {
           alert('Brak uprawnień do dodania kursu.');
         }
       }
     });
+  }
+
+  // Map English day names back to Polish for display
+  getDisplayDays(recurrenceDays: string): string {
+    if (!recurrenceDays) return 'Brak';
+    const enDays = recurrenceDays.split(',').map(day => day.trim());
+    return enDays
+      .map(enDay => this.daysOfWeek.find(day => day.en === enDay)?.pl || enDay)
+      .join(', ');
   }
 
   deleteCourse(id: string) {
@@ -146,7 +205,14 @@ export class CourseManagementComponent {
       instructor: '',
       durationHours: 0,
       link: '',
-      enrolled: false
+      enrolled: false,
+      startDate: new Date(),
+      meetingDates: [],
+      recurrenceDays: '',
+      recurrenceWeeks: 1,
+      startTime: '18:00',
+      endTime: '20:00'
     };
+    this.selectedDays = new Array(this.daysOfWeek.length).fill(false);
   }
 }

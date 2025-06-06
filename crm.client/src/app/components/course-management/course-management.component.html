@@ -35,6 +35,31 @@
             <label for="link">Link</label>
             <input id="link" [(ngModel)]="newCourse.link" name="link" placeholder="Wprowadź link do kursu">
           </div>
+          <div class="form-group">
+            <label for="startDate">Data rozpoczęcia</label>
+            <input id="startDate" type="date" [(ngModel)]="newCourse.startDate" name="startDate" required>
+          </div>
+          <div class="form-group">
+            <label>Dni spotkań</label>
+            <div class="checkbox-group">
+              <div *ngFor="let day of daysOfWeek; let i = index" class="checkbox-item">
+                <input type="checkbox" [id]="'day-' + i" [(ngModel)]="selectedDays[i]" [name]="'day-' + i">
+                <label [for]="'day-' + i">{{ day.pl }}</label>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="recurrenceWeeks">Liczba tygodni</label>
+            <input id="recurrenceWeeks" type="number" [(ngModel)]="newCourse.recurrenceWeeks" name="recurrenceWeeks" required min="1" placeholder="Wprowadź liczbę tygodni">
+          </div>
+          <div class="form-group">
+            <label for="startTime">Godzina rozpoczęcia</label>
+            <input id="startTime" type="time" [(ngModel)]="newCourse.startTime" name="startTime" required>
+          </div>
+          <div class="form-group">
+            <label for="endTime">Godzina zakończenia</label>
+            <input id="endTime" type="time" [(ngModel)]="newCourse.endTime" name="endTime" required>
+          </div>
           <div class="form-actions">
             <button type="submit" class="btn btn-primary">Dodaj kurs</button>
             <button type="button" class="btn btn-cancel" (click)="toggleForm()">Anuluj</button>
@@ -50,12 +75,18 @@
           <p><strong>Prowadzący:</strong> {{ course.instructor || 'Brak' }}</p>
           <p><strong>Czas trwania:</strong> {{ course.durationHours }} godzin</p>
           <p><strong>Link:</strong> <a [href]="course.link" target="_blank">{{ course.link || 'Brak' }}</a></p>
+          <p><strong>Data rozpoczęcia:</strong> {{ course.startDate | date:'mediumDate' }}</p>
+          <p><strong>Harmonogram:</strong> {{ getDisplayDays(course.recurrenceDays) }} przez {{ course.recurrenceWeeks || 0 }} tygodni, {{ course.startTime }}-{{ course.endTime }}</p>
+          <div class="meeting-dates">
+            <p><strong>Spotkania:</strong></p>
+            <ul>
+              <li *ngFor="let date of course.meetingDates">{{ date | date:'medium' }}</li>
+            </ul>
+          </div>
           <div class="course-actions">
-            <!-- Enroll/Unenroll button for Students -->
             <button *ngIf="authService.isStudent()" class="btn btn-enroll" (click)="toggleEnrollment(course)">
               {{ course.enrolled ? 'Wypisz się' : 'Zapisz się' }}
             </button>
-            <!-- Delete button for Admins -->
             <button *ngIf="authService.isAdmin()" class="btn btn-delete" (click)="deleteCourse(course.id)">Usuń</button>
           </div>
         </div>
