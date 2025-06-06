@@ -28,6 +28,10 @@
           <label for="duration">Czas trwania (godziny)</label>
           <input id="duration" type="number" [(ngModel)]="newCourse.durationHours" name="durationHours" required placeholder="Wprowadź czas trwania">
         </div>
+        <div class="form-group">
+          <label for="link">Link</label>
+          <input id="link" [(ngModel)]="newCourse.link" name="link" placeholder="Wprowadź link do kursu">
+        </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Dodaj kurs</button>
           <button type="button" class="btn btn-cancel" (click)="toggleForm()">Anuluj</button>
@@ -41,6 +45,7 @@
         <p>{{ course.description }}</p>
         <p><strong>Prowadzący:</strong> {{ course.instructor || 'Brak' }}</p>
         <p><strong>Czas trwania:</strong> {{ course.durationHours }} godzin</p>
+        <p><strong>Link:</strong> <a [href]="course.link" target="_blank">{{ course.link || 'Brak' }}</a></p>
         <div class="course-actions">
           <button class="btn btn-enroll" (click)="toggleEnrollment(course)">
             {{ course.enrolled ? 'Wypisz się' : 'Zapisz się' }}

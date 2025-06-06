@@ -11,6 +11,7 @@ export interface Course {
   description: string;
   instructor: string;
   durationHours: number;
+  link: string; 
   enrolled?: boolean;
 }
 
@@ -28,7 +29,8 @@ export class CourseManagementComponent {
     title: '',
     description: '',
     instructor: '',
-    durationHours: 0
+    durationHours: 0,
+    link: '' 
   };
   showForm: boolean = false;
 
@@ -96,7 +98,8 @@ export class CourseManagementComponent {
       title: '',
       description: '',
       instructor: '',
-      durationHours: 0
+      durationHours: 0,
+      link: ''
     };
   }
 }

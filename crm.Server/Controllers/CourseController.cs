@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using crm.Server.Models;
 using crm.Server.Data;
 using crm.Server.Models.Dto;
-using System.Security.Claims;
 
 namespace crm.Server.Controllers
 {
@@ -31,7 +30,8 @@ namespace crm.Server.Controllers
                 Title = c.Title,
                 Description = c.Description,
                 Instructor = c.Instructor,
-                DurationHours = c.DurationHours
+                DurationHours = c.DurationHours,
+                Link = c.Link 
             }).ToList();
             return Ok(courseDtos);
         }
@@ -50,68 +50,14 @@ namespace crm.Server.Controllers
                 Title = courseDto.Title,
                 Description = courseDto.Description,
                 Instructor = courseDto.Instructor,
-                DurationHours = courseDto.DurationHours
+                DurationHours = courseDto.DurationHours,
+                Link = courseDto.Link 
             };
 
             _context.Courses.Add(course);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetCourses), new { id = course.Id }, courseDto);
-        }
-
-        [HttpPost("{id}/enroll")]
-        public async Task<IActionResult> Enroll(string id, [FromBody] EnrollRequest request)
-        {
-            var course = await _context.Courses.FindAsync(id);
-            if (course == null) return NotFound();
-
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId)) return Unauthorized();
-
-            var enrollment = await _context.UserCourses
-                .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.CourseId == id);
-
-            if (request.Action == "enroll" && enrollment == null)
-            {
-                _context.UserCourses.Add(new UserCourse
-                {
-                    UserId = userId,
-                    CourseId = id
-                });
-            }
-            else if (request.Action == "unenroll" && enrollment != null)
-            {
-                _context.UserCourses.Remove(enrollment);
-            }
-            else
-            {
-                return BadRequest("Invalid action or enrollment state.");
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok();
-        }
-
-        [HttpGet("enrolled")]
-        public async Task<ActionResult<List<CourseDto>>> GetEnrolledCourses()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId)) return Unauthorized();
-
-            var enrolledCourses = await _context.UserCourses
-                .Where(uc => uc.UserId == userId)
-                .Include(uc => uc.Course)
-                .Select(uc => new CourseDto
-                {
-                    Id = uc.Course.Id,
-                    Title = uc.Course.Title,
-                    Description = uc.Course.Description,
-                    Instructor = uc.Course.Instructor,
-                    DurationHours = uc.Course.DurationHours
-                })
-                .ToListAsync();
-
-            return Ok(enrolledCourses);
         }
 
         [HttpGet("test")]
@@ -130,10 +76,5 @@ namespace crm.Server.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
-    }
-
-    public class EnrollRequest
-    {
-        public string? Action { get; set; }
     }
 }

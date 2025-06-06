@@ -7,6 +7,5 @@ namespace crm.Server.Models
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? Role { get; set; }
-        public List<UserCourse> Enrollments { get; set; } = new List<UserCourse>();
     }
 }
