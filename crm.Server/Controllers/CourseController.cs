@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using crm.Server.Models;
 using crm.Server.Data;
@@ -21,9 +23,16 @@ namespace crm.Server.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<List<CourseDto>>> GetCourses()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var courses = await _context.Courses.ToListAsync();
+            var enrollments = await _context.CourseEnrollments
+                .Where(e => e.UserId == userId)
+                .Select(e => e.CourseId)
+                .ToListAsync();
+
             var courseDtos = courses.Select(c => new CourseDto
             {
                 Id = c.Id,
@@ -31,12 +40,15 @@ namespace crm.Server.Controllers
                 Description = c.Description,
                 Instructor = c.Instructor,
                 DurationHours = c.DurationHours,
-                Link = c.Link 
+                Link = c.Link,
+                Enrolled = enrollments.Contains(c.Id)
             }).ToList();
+
             return Ok(courseDtos);
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<CourseDto>> AddCourse([FromBody] CourseDto courseDto)
         {
             if (!ModelState.IsValid)
@@ -51,11 +63,14 @@ namespace crm.Server.Controllers
                 Description = courseDto.Description,
                 Instructor = courseDto.Instructor,
                 DurationHours = courseDto.DurationHours,
-                Link = courseDto.Link 
+                Link = courseDto.Link
             };
 
             _context.Courses.Add(course);
             await _context.SaveChangesAsync();
+
+            courseDto.Id = course.Id;
+            courseDto.Enrolled = false;
 
             return CreatedAtAction(nameof(GetCourses), new { id = course.Id }, courseDto);
         }
@@ -64,6 +79,7 @@ namespace crm.Server.Controllers
         public IActionResult Test() => Ok("CourseController is working");
 
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteCourse(string id)
         {
             var course = await _context.Courses.FindAsync(id);
@@ -76,5 +92,59 @@ namespace crm.Server.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpPost("{courseId}/enroll")]
+        [Authorize]
+        public async Task<IActionResult> ToggleEnrollment(string courseId, [FromBody] EnrollmentActionDto action)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var course = await _context.Courses.FindAsync(courseId);
+
+            if (course == null)
+            {
+                return NotFound("Course not found");
+            }
+
+            var enrollment = await _context.CourseEnrollments
+                .FirstOrDefaultAsync(e => e.UserId == userId && e.CourseId == courseId);
+
+            if (action.Action == "enroll")
+            {
+                if (enrollment != null)
+                {
+                    return BadRequest("User already enrolled");
+                }
+
+                enrollment = new CourseEnrollment
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    UserId = userId,
+                    CourseId = courseId
+                };
+
+                _context.CourseEnrollments.Add(enrollment);
+            }
+            else if (action.Action == "unenroll")
+            {
+                if (enrollment == null)
+                {
+                    return BadRequest("User not enrolled");
+                }
+
+                _context.CourseEnrollments.Remove(enrollment);
+            }
+            else
+            {
+                return BadRequest("Invalid action");
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { Enrolled = action.Action == "enroll" });
+        }
+    }
+
+    public class EnrollmentActionDto
+    {
+        public string Action { get; set; }
     }
 }

@@ -7,7 +7,8 @@
         public string? Description { get; set; }
         public string? Instructor { get; set; }
         public int DurationHours { get; set; }
-
         public string? Link { get; set; }
+
+        public bool Enrolled { get; set; }
     }
 }
