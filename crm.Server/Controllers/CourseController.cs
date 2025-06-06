@@ -13,6 +13,7 @@ namespace crm.Server.Controllers
 {
     [Route("api/courses")]
     [ApiController]
+    [Authorize] // Require authentication for all endpoints
     public class CourseController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -23,7 +24,7 @@ namespace crm.Server.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "Student,Tutor,Admin")] // All roles can view courses
         public async Task<ActionResult<List<CourseDto>>> GetCourses()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -48,7 +49,7 @@ namespace crm.Server.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = "Admin")] // Only Admins can add courses
         public async Task<ActionResult<CourseDto>> AddCourse([FromBody] CourseDto courseDto)
         {
             if (!ModelState.IsValid)
@@ -76,10 +77,11 @@ namespace crm.Server.Controllers
         }
 
         [HttpGet("test")]
+        [AllowAnonymous] // Public access for testing
         public IActionResult Test() => Ok("CourseController is working");
 
         [HttpDelete("{id}")]
-        [Authorize]
+        [Authorize(Roles = "Admin")] // Only Admins can delete courses
         public async Task<IActionResult> DeleteCourse(string id)
         {
             var course = await _context.Courses.FindAsync(id);
@@ -94,7 +96,7 @@ namespace crm.Server.Controllers
         }
 
         [HttpPost("{courseId}/enroll")]
-        [Authorize]
+        [Authorize(Roles = "Student")] // Only Students can enroll/unenroll
         public async Task<IActionResult> ToggleEnrollment(string courseId, [FromBody] EnrollmentActionDto action)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

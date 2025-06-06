@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace TutoringCRM.Backend.Controllers
 {
@@ -15,12 +16,18 @@ namespace TutoringCRM.Backend.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager; 
         private readonly IConfiguration _configuration;
 
-        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration)
+        public AuthController(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            RoleManager<IdentityRole> roleManager,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _roleManager = roleManager;
             _configuration = configuration;
         }
 
@@ -35,37 +42,54 @@ namespace TutoringCRM.Backend.Controllers
                 return BadRequest(new { Errors = modelStateErrors });
             }
 
+            // Validate role
+            var validRoles = new[] { "Student", "Tutor", "Admin" };
+            if (!validRoles.Contains(model.Role))
+            {
+                Console.WriteLine($"Invalid role: {model.Role}");
+                return BadRequest(new { Errors = new[] { $"Invalid role: {model.Role}. Allowed roles: {string.Join(", ", validRoles)}" } });
+            }
+
             var user = new ApplicationUser
             {
                 UserName = model.Email,
                 Email = model.Email,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                Role = model.Role
+                Role = model.Role 
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                var isInRole = await _userManager.IsInRoleAsync(user, model.Role);
-                if (!isInRole)
-                {
-                    var roleResult = await _userManager.AddToRoleAsync(user, model.Role);
-                    if (!roleResult.Succeeded)
-                    {
-                        var roleErrors = roleResult.Errors.Select(e => e.Description).ToList();
-                        Console.WriteLine($"Role assignment errors: {string.Join(", ", roleErrors)}");
-                        return BadRequest(new { Errors = roleErrors });
-                    }
-                }
-
-                Console.WriteLine($"User {user.Email} registered with role {model.Role}");
-                return Ok(new { Message = "User registered successfully" });
+                var identityErrors = result.Errors.Select(e => e.Description).ToList();
+                Console.WriteLine($"Identity errors: {string.Join(", ", identityErrors)}");
+                return BadRequest(new { Errors = identityErrors });
             }
 
-            var identityErrors = result.Errors.Select(e => e.Description).ToList();
-            Console.WriteLine($"Identity errors: {string.Join(", ", identityErrors)}");
-            return BadRequest(new { Errors = identityErrors });
+            // Ensure role exists
+            if (!await _roleManager.RoleExistsAsync(model.Role))
+            {
+                var roleResult = await _roleManager.CreateAsync(new IdentityRole(model.Role));
+                if (!roleResult.Succeeded)
+                {
+                    var roleErrors = roleResult.Errors.Select(e => e.Description).ToList();
+                    Console.WriteLine($"Role creation errors: {string.Join(", ", roleErrors)}");
+                    return BadRequest(new { Errors = roleErrors });
+                }
+            }
+
+            // Assign role to user
+            var addToRoleResult = await _userManager.AddToRoleAsync(user, model.Role);
+            if (!addToRoleResult.Succeeded)
+            {
+                var roleErrors = addToRoleResult.Errors.Select(e => e.Description).ToList();
+                Console.WriteLine($"Role assignment errors: {string.Join(", ", roleErrors)}");
+                return BadRequest(new { Errors = roleErrors });
+            }
+
+            Console.WriteLine($"User {user.Email} registered with role {model.Role}");
+            return Ok(new { Message = "User registered successfully" });
         }
 
         [HttpPost("login")]
@@ -76,7 +100,7 @@ namespace TutoringCRM.Backend.Controllers
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                var token = GenerateJwtToken(user);
+                var token = await GenerateJwtToken(user);
                 Console.WriteLine($"Login successful for {user.Email}");
                 return Ok(new { Token = token });
             }
@@ -84,13 +108,16 @@ namespace TutoringCRM.Backend.Controllers
             return Unauthorized(new { Errors = new[] { "Invalid login attempt" } });
         }
 
-        private string GenerateJwtToken(ApplicationUser user)
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault() ?? "Student"; 
+
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(ClaimTypes.Role, role)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
