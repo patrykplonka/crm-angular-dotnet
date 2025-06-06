@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 
@@ -11,8 +11,8 @@ export interface Course {
   description: string;
   instructor: string;
   durationHours: number;
-  link: string; 
-  enrolled?: boolean;
+  link: string;
+  enrolled: boolean;
 }
 
 @Component({
@@ -30,7 +30,8 @@ export class CourseManagementComponent {
     description: '',
     instructor: '',
     durationHours: 0,
-    link: '' 
+    link: '',
+    enrolled: false
   };
   showForm: boolean = false;
 
@@ -38,13 +39,17 @@ export class CourseManagementComponent {
     this.loadCourses();
   }
 
+  private getAuthHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      'Authorization': `Bearer ${localStorage.getItem('token')}`, // Replace with your token retrieval logic
+      'Content-Type': 'application/json'
+    });
+  }
+
   loadCourses() {
-    this.http.get<Course[]>('http://localhost:5241/api/courses').subscribe({
+    this.http.get<Course[]>('http://localhost:5241/api/courses', { headers: this.getAuthHeaders() }).subscribe({
       next: (data) => {
-        this.courses = data.map(course => ({
-          ...course,
-          enrolled: false
-        }));
+        this.courses = data;
       },
       error: (err) => console.error('Błąd ładowania kursów:', err.status, err.statusText, err.message)
     });
@@ -56,9 +61,9 @@ export class CourseManagementComponent {
       return;
     }
 
-    this.http.post<Course>('http://localhost:5241/api/courses', this.newCourse).subscribe({
+    this.http.post<Course>('http://localhost:5241/api/courses', this.newCourse, { headers: this.getAuthHeaders() }).subscribe({
       next: (course) => {
-        this.courses.push({ ...course, enrolled: false });
+        this.courses.push(course);
         this.resetForm();
         this.showForm = false;
       },
@@ -68,7 +73,7 @@ export class CourseManagementComponent {
 
   deleteCourse(id: string) {
     if (confirm('Czy na pewno chcesz usunąć ten kurs?')) {
-      this.http.delete(`http://localhost:5241/api/courses/${id}`).subscribe({
+      this.http.delete(`http://localhost:5241/api/courses/${id}`, { headers: this.getAuthHeaders() }).subscribe({
         next: () => {
           this.courses = this.courses.filter(course => course.id !== id);
         },
@@ -80,9 +85,9 @@ export class CourseManagementComponent {
   toggleEnrollment(course: Course) {
     const url = `http://localhost:5241/api/courses/${course.id}/enroll`;
     const action = course.enrolled ? 'unenroll' : 'enroll';
-    this.http.post(url, { action }).subscribe({
-      next: () => {
-        course.enrolled = !course.enrolled;
+    this.http.post<{ enrolled: boolean }>(url, { action }, { headers: this.getAuthHeaders() }).subscribe({
+      next: (response) => {
+        course.enrolled = response.enrolled;
       },
       error: (err) => console.error('Błąd zmiany statusu zapisu:', err)
     });
@@ -99,7 +104,8 @@ export class CourseManagementComponent {
       description: '',
       instructor: '',
       durationHours: 0,
-      link: ''
+      link: '',
+      enrolled: false
     };
   }
 }

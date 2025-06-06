@@ -40,7 +40,7 @@ h2 {
 
   .add-course-form.visible {
     height: auto;
-    min-height: 450px; 
+    min-height: 450px;
     opacity: 1;
     visibility: visible;
   }
@@ -200,6 +200,6 @@ h2 {
   }
 
     .add-course-form.visible {
-      min-height: 550px; 
+      min-height: 550px;
     }
 }
