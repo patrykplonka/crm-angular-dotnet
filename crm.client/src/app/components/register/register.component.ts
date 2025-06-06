@@ -17,9 +17,12 @@ export class RegisterComponent {
   constructor(private authService: AuthService) { }
 
   register() {
-    console.log('Register model:', this.model);
+    console.log('Register model before submission:', this.model); // Debug: Log model
     this.authService.register(this.model).subscribe({
-      next: () => alert('Zarejestrowano!'),
+      next: () => {
+        alert('Zarejestrowano!');
+        console.log('Registration successful');
+      },
       error: (err) => {
         let errorMessage = 'Nieznany błąd!';
         if (err.error?.Errors) {

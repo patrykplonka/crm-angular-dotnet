@@ -3,13 +3,13 @@
     public class ScheduleEvent
     {
         public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public DateTime StartDateTime { get; set; }
-        public DateTime EndDateTime { get; set; }
-        public string Description { get; set; } = string.Empty;
-        public int CourseId { get; set; } // Powiązanie z kursem
-        public string UserId { get; set; } = string.Empty; // Powiązanie z ApplicationUser (IdentityUser)
-        public Course Course { get; set; } // Nawigacyjna właściwość
-        public ApplicationUser User { get; set; } // Nawigacyjna właściwość
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string? CourseId { get; set; }
+        public Course? Course { get; set; }
+        public string? UserId { get; set; }
+        public ApplicationUser? User { get; set; }
     }
 }

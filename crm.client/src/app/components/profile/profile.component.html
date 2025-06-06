@@ -1,0 +1,27 @@
+<div class="profile-container">
+  <app-sidebar></app-sidebar>
+  <div class="profile-content">
+    <h2>Profil Użytkownika</h2>
+
+    <div class="profile-details" *ngIf="user">
+      <h3>Dane osobowe</h3>
+      <p><strong>Imię:</strong> {{ user.firstName || 'Brak' }}</p>
+      <p><strong>Nazwisko:</strong> {{ user.lastName || 'Brak' }}</p>
+      <p><strong>Email:</strong> {{ user.email || 'Brak' }}</p>
+      <p><strong>Rola:</strong> {{ user.role || 'Brak' }}</p>
+    </div>
+
+    <div class="enrolled-courses">
+      <h3>Zapisane kursy</h3>
+      <div *ngIf="enrolledCourses.length === 0">
+        <p>Brak zapisanych kursów.</p>
+      </div>
+      <div *ngFor="let course of enrolledCourses" class="course-item">
+        <h4>{{ course.title }}</h4>
+        <p>{{ course.description }}</p>
+        <p><strong>Prowadzący:</strong> {{ course.instructor || 'Brak' }}</p>
+        <p><strong>Czas trwania:</strong> {{ course.durationHours }} godzin</p>
+      </div>
+    </div>
+  </div>
+</div>
