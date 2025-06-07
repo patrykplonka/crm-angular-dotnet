@@ -40,7 +40,7 @@ namespace crm.Server.Controllers
                 Id = c.Id,
                 Title = c.Title,
                 Description = c.Description,
-                Instructor = c.Instructor,
+                Instructor = c.Instructor, // Używane jako TutorId
                 DurationHours = c.DurationHours,
                 Link = c.Link,
                 Enrolled = enrollments.Contains(c.Id),
@@ -55,6 +55,60 @@ namespace crm.Server.Controllers
             }).ToList();
 
             return Ok(courseDtos);
+        }
+
+        [HttpGet("tutor")]
+        [Authorize(Roles = "Tutor")]
+        public async Task<ActionResult<List<CourseDto>>> GetTutorCourses()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var courses = await _context.Courses
+                .Where(c => c.Instructor == userId)
+                .ToListAsync();
+
+            var courseDtos = courses.Select(c => new CourseDto
+            {
+                Id = c.Id,
+                Title = c.Title,
+                Description = c.Description,
+                Instructor = c.Instructor,
+                DurationHours = c.DurationHours,
+                Link = c.Link,
+                Enrolled = false, // Korepetytor nie jest zapisany jako student
+                StartDate = c.StartDate,
+                EndDate = c.EndDate,
+                RecurrencePattern = c.RecurrencePattern,
+                MeetingDates = c.MeetingDates,
+                RecurrenceDays = ParseRecurrenceDays(c.RecurrencePattern),
+                RecurrenceWeeks = ParseRecurrenceWeeks(c.RecurrencePattern),
+                StartTime = ParseTime(c.RecurrencePattern, "StartTime"),
+                EndTime = ParseTime(c.RecurrencePattern, "EndTime")
+            }).ToList();
+
+            return Ok(courseDtos);
+        }
+
+        [HttpPost("{courseId}/assign-tutor")]
+        [Authorize(Roles = "Tutor")]
+        public async Task<IActionResult> AssignTutor(string courseId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var course = await _context.Courses.FindAsync(courseId);
+
+            if (course == null)
+            {
+                return NotFound("Kurs nie znaleziony");
+            }
+
+            if (!string.IsNullOrEmpty(course.Instructor))
+            {
+                return BadRequest("Kurs ma już przypisanego korepetytora");
+            }
+
+            course.Instructor = userId;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Korepetytor przypisany do kursu" });
         }
 
         [HttpPost]
@@ -72,13 +126,13 @@ namespace crm.Server.Controllers
                 courseDto.RecurrenceWeeks <= 0 || string.IsNullOrEmpty(courseDto.StartTime) ||
                 string.IsNullOrEmpty(courseDto.EndTime))
             {
-                return BadRequest("All required fields must be provided.");
+                return BadRequest("Wszystkie wymagane pola muszą być wypełnione.");
             }
 
             // Validate time format
             if (!TimeSpan.TryParse(courseDto.StartTime, out _) || !TimeSpan.TryParse(courseDto.EndTime, out _))
             {
-                return BadRequest("Invalid time format for StartTime or EndTime.");
+                return BadRequest("Nieprawidłowy format czasu dla StartTime lub EndTime.");
             }
 
             // Validate recurrence days
@@ -86,7 +140,7 @@ namespace crm.Server.Controllers
             var days = courseDto.RecurrenceDays.Split(',').Select(d => d.Trim()).ToList();
             if (days.Any(d => !validDays.Contains(d)))
             {
-                return BadRequest("Invalid recurrence days provided.");
+                return BadRequest("Podano nieprawidłowe dni powtarzania.");
             }
 
             var course = new Course
@@ -94,7 +148,7 @@ namespace crm.Server.Controllers
                 Id = Guid.NewGuid().ToString(),
                 Title = courseDto.Title,
                 Description = courseDto.Description,
-                Instructor = courseDto.Instructor,
+                Instructor = courseDto.Instructor, // Może być null, jeśli admin nie przypisze korepetytora
                 DurationHours = courseDto.DurationHours,
                 Link = courseDto.Link,
                 StartDate = courseDto.StartDate,
@@ -141,7 +195,7 @@ namespace crm.Server.Controllers
 
             if (course == null)
             {
-                return NotFound("Course not found");
+                return NotFound("Kurs nie znaleziony");
             }
 
             var enrollment = await _context.CourseEnrollments
@@ -151,7 +205,7 @@ namespace crm.Server.Controllers
             {
                 if (enrollment != null)
                 {
-                    return BadRequest("User already enrolled");
+                    return BadRequest("Użytkownik już zapisany na kurs");
                 }
 
                 enrollment = new CourseEnrollment
@@ -167,14 +221,14 @@ namespace crm.Server.Controllers
             {
                 if (enrollment == null)
                 {
-                    return BadRequest("User not enrolled");
+                    return BadRequest("Użytkownik nie jest zapisany na kurs");
                 }
 
                 _context.CourseEnrollments.Remove(enrollment);
             }
             else
             {
-                return BadRequest("Invalid action");
+                return BadRequest("Nieprawidłowa akcja");
             }
 
             await _context.SaveChangesAsync();

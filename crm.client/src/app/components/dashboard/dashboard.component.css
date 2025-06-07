@@ -79,9 +79,37 @@ main {
     color: #374151;
   }
 
-  .card p {
+  .card h3 {
+    margin-bottom: 8px;
     font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .card p {
+    font-size: 14px;
     color: #111827;
+    margin-bottom: 8px;
+  }
+
+/* Sekcja korepetytora */
+.tutor-section {
+  margin-top: 24px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.course-card {
+  transition: transform 0.3s ease;
+}
+
+  .course-card:hover {
+    transform: translateY(-4px);
   }
 
 /* Siatka */
