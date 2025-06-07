@@ -1,100 +1,95 @@
-<div class="course-container">
+<div class="course-management-container">
   <app-sidebar></app-sidebar>
+
   <div class="course-content">
-    <h2>Dostępne kursy</h2>
+    <header class="course-header">
+      <h1 class="text-2xl font-bold text-gray-800 mb-1">Zarządzanie kursami</h1>
+      <p class="text-sm text-gray-500">Przeglądaj i zarządzaj kursami</p>
+      <button *ngIf="authService.isAdmin()" class="add-course-btn" (click)="toggleForm()">
+        {{ showForm ? 'Anuluj' : 'Dodaj kurs' }}
+      </button>
+    </header>
 
-    <div *ngIf="authService.isLoggedIn(); else notLoggedIn">
-      <!-- Add course button for Admins -->
-      <div class="form-toggle" *ngIf="authService.isAdmin()">
-        <button class="btn btn-primary" (click)="toggleForm()">
-          {{ showForm ? 'Ukryj formularz' : 'Dodaj kurs' }}
-        </button>
-      </div>
-
-      <!-- Add course form for Admins -->
-      <div class="add-course-form" [class.visible]="showForm" *ngIf="authService.isAdmin()">
-        <h3>Dodaj nowy kurs</h3>
-        <form (ngSubmit)="addCourse()">
-          <div class="form-group">
-            <label for="title">Tytuł</label>
-            <input id="title" [(ngModel)]="newCourse.title" name="title" required placeholder="Wprowadź tytuł kursu">
-          </div>
-          <div class="form-group">
-            <label for="description">Opis</label>
-            <textarea id="description" [(ngModel)]="newCourse.description" name="description" required placeholder="Wprowadź opis kursu"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="instructor">Prowadzący</label>
-            <input id="instructor" [(ngModel)]="newCourse.instructor" name="instructor" placeholder="Wprowadź imię prowadzącego">
-          </div>
-          <div class="form-group">
-            <label for="duration">Czas trwania (godziny)</label>
-            <input id="duration" type="number" [(ngModel)]="newCourse.durationHours" name="durationHours" required placeholder="Wprowadź czas trwania">
-          </div>
-          <div class="form-group">
-            <label for="link">Link</label>
-            <input id="link" [(ngModel)]="newCourse.link" name="link" placeholder="Wprowadź link do kursu">
-          </div>
-          <div class="form-group">
-            <label for="startDate">Data rozpoczęcia</label>
-            <input id="startDate" type="date" [(ngModel)]="newCourse.startDate" name="startDate" required>
-          </div>
-          <div class="form-group">
-            <label>Dni spotkań</label>
-            <div class="checkbox-group">
-              <div *ngFor="let day of daysOfWeek; let i = index" class="checkbox-item">
-                <input type="checkbox" [id]="'day-' + i" [(ngModel)]="selectedDays[i]" [name]="'day-' + i">
-                <label [for]="'day-' + i">{{ day.pl }}</label>
+    <main>
+      <!-- Formularz dodawania kursu (tylko dla Admina) -->
+      <section *ngIf="showForm && authService.isAdmin()" class="form-section">
+        <h2 class="section-title">Dodaj nowy kurs</h2>
+        <div class="card">
+          <form (ngSubmit)="addCourse()">
+            <div class="form-group">
+              <label for="title">Tytuł kursu</label>
+              <input type="text" id="title" [(ngModel)]="newCourse.title" name="title" required>
+            </div>
+            <div class="form-group">
+              <label for="description">Opis</label>
+              <textarea id="description" [(ngModel)]="newCourse.description" name="description" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="duration">Czas trwania (godziny)</label>
+              <input type="number" id="duration" [(ngModel)]="newCourse.durationHours" name="duration" min="1" required>
+            </div>
+            <div class="form-group">
+              <label for="link">Link do kursu</label>
+              <input type="url" id="link" [(ngModel)]="newCourse.link" name="link">
+            </div>
+            <div class="form-group">
+              <label for="startDate">Data rozpoczęcia</label>
+              <input type="date" id="startDate" [(ngModel)]="newCourse.startDate" name="startDate" required>
+            </div>
+            <div class="form-group">
+              <label>Dni tygodnia</label>
+              <div class="checkbox-group">
+                <div *ngFor="let day of daysOfWeek; let i = index">
+                  <input type="checkbox" [id]="'day-' + i" [(ngModel)]="selectedDays[i]" [name]="'day-' + i">
+                  <label [for]="'day-' + i">{{ day.pl }}</label>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="form-group">
-            <label for="recurrenceWeeks">Liczba tygodni</label>
-            <input id="recurrenceWeeks" type="number" [(ngModel)]="newCourse.recurrenceWeeks" name="recurrenceWeeks" required min="1" placeholder="Wprowadź liczbę tygodni">
-          </div>
-          <div class="form-group">
-            <label for="startTime">Godzina rozpoczęcia</label>
-            <input id="startTime" type="time" [(ngModel)]="newCourse.startTime" name="startTime" required>
-          </div>
-          <div class="form-group">
-            <label for="endTime">Godzina zakończenia</label>
-            <input id="endTime" type="time" [(ngModel)]="newCourse.endTime" name="endTime" required>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Dodaj kurs</button>
-            <button type="button" class="btn btn-cancel" (click)="toggleForm()">Anuluj</button>
-          </div>
-        </form>
-      </div>
+            <div class="form-group">
+              <label for="recurrenceWeeks">Liczba tygodni</label>
+              <input type="number" id="recurrenceWeeks" [(ngModel)]="newCourse.recurrenceWeeks" name="recurrenceWeeks" min="1" required>
+            </div>
+            <div class="form-group">
+              <label for="startTime">Godzina rozpoczęcia</label>
+              <input type="time" id="startTime" [(ngModel)]="newCourse.startTime" name="startTime" required>
+            </div>
+            <div class="form-group">
+              <label for="endTime">Godzina zakończenia</label>
+              <input type="time" id="endTime" [(ngModel)]="newCourse.endTime" name="endTime" required>
+            </div>
+            <button type="submit" class="submit-btn">Dodaj kurs</button>
+          </form>
+        </div>
+      </section>
 
-      <!-- Course list for all roles -->
-      <div class="course-list">
-        <div *ngFor="let course of courses" class="course-item">
-          <h3>{{ course.title }}</h3>
-          <p>{{ course.description }}</p>
-          <p><strong>Prowadzący:</strong> {{ course.instructor || 'Brak' }}</p>
-          <p><strong>Czas trwania:</strong> {{ course.durationHours }} godzin</p>
-          <p><strong>Link:</strong> <a [href]="course.link" target="_blank">{{ course.link || 'Brak' }}</a></p>
-          <p><strong>Data rozpoczęcia:</strong> {{ course.startDate | date:'mediumDate' }}</p>
-          <p><strong>Harmonogram:</strong> {{ getDisplayDays(course.recurrenceDays) }} przez {{ course.recurrenceWeeks || 0 }} tygodni, {{ course.startTime }}-{{ course.endTime }}</p>
-          <div class="meeting-dates">
-            <p><strong>Spotkania:</strong></p>
-            <ul>
-              <li *ngFor="let date of course.meetingDates">{{ date | date:'medium' }}</li>
-            </ul>
-          </div>
-          <div class="course-actions">
-            <button *ngIf="authService.isStudent()" class="btn btn-enroll" (click)="toggleEnrollment(course)">
+      <!-- Lista kursów -->
+      <section class="course-list">
+        <h2 class="section-title">Lista kursów</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div *ngFor="let course of courses" class="card course-card">
+            <h3>{{ course.title }}</h3>
+            <p>{{ course.description }}</p>
+            <p><strong>Czas trwania:</strong> {{ course.durationHours }} godzin</p>
+            <p><strong>Harmonogram:</strong> {{ getDisplayDays(course.recurrenceDays) }} przez {{ course.recurrenceWeeks || 0 }} tygodni, {{ course.startTime }}-{{ course.endTime }}</p>
+            <p><strong>Korepetytor:</strong> {{ course.instructor ? 'Przypisany' : 'Brak' }}</p>
+            <!-- Przycisk dla studentów -->
+            <button *ngIf="authService.isStudent()" class="action-btn" (click)="toggleEnrollment(course)">
               {{ course.enrolled ? 'Wypisz się' : 'Zapisz się' }}
             </button>
-            <button *ngIf="authService.isAdmin()" class="btn btn-delete" (click)="deleteCourse(course.id)">Usuń</button>
+            <!-- Przycisk dla korepetytorów -->
+            <button *ngIf="authService.isTutor() && !course.instructor" class="action-btn assign-btn" (click)="assignTutor(course)">
+              Przypisz się
+            </button>
+            <!-- Przycisk usuwania dla admina -->
+            <button *ngIf="authService.isAdmin()" class="action-btn delete-btn" (click)="deleteCourse(course.id)">
+              Usuń
+            </button>
+          </div>
+          <div *ngIf="courses.length === 0" class="card">
+            <p>Brak dostępnych kursów.</p>
           </div>
         </div>
-      </div>
-    </div>
-
-    <ng-template #notLoggedIn>
-      <p>Proszę się zalogować, aby zobaczyć kursy.</p>
-    </ng-template>
+      </section>
+    </main>
   </div>
 </div>

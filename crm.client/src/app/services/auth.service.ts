@@ -47,6 +47,20 @@ export class AuthService {
       );
   }
 
+  getUserId(): string | null {
+    const token = this.getToken();
+    if (token) {
+      try {
+        const decoded: any = this.jwtHelper.decodeToken(token);
+        return decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || null;
+      } catch (err) {
+        console.error('JWT decode error:', err);
+        return null;
+      }
+    }
+    return null;
+  }
+
   isLoggedIn(): boolean {
     const token = this.getToken();
     return !!token && !this.jwtHelper.isTokenExpired(token);
@@ -65,7 +79,7 @@ export class AuthService {
     if (!token) return null;
     try {
       const decoded: any = this.jwtHelper.decodeToken(token);
-      console.log('Decoded JWT:', decoded); 
+      console.log('Decoded JWT:', decoded);
       return decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || decoded.role || null;
     } catch (err) {
       console.error('JWT decode error:', err);

@@ -22,8 +22,45 @@
           <h2>Liczba użytkowników</h2>
           <p>1</p>
         </div>
+        <div class="card" *ngIf="authService.isTutor()">
+          <h2>Twoje kursy</h2>
+          <p>{{ courses.length }} przypisanych kursów</p>
+        </div>
+      </section>
+
+      <section *ngIf="authService.isTutor()" class="tutor-section">
+        <h2 class="section-title">Twoje kursy</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          <div *ngFor="let course of courses" class="card course-card">
+            <h3>{{ course.title }}</h3>
+            <p>{{ course.description }}</p>
+            <p><strong>Czas trwania:</strong> {{ course.durationHours }} godzin</p>
+            <p><strong>Harmonogram:</strong> {{ getDisplayDays(course.recurrenceDays) }} przez {{ course.recurrenceWeeks || 0 }} tygodni, {{ course.startTime }}-{{ course.endTime }}</p>
+            <p>
+              <strong>Następne spotkanie:</strong>
+              <span *ngIf="course.meetingDates.length > 0; else noMeeting">
+                {{ course.meetingDates[0] | date:'medium' }}
+              </span>
+              <ng-template #noMeeting>Brak</ng-template>
+            </p>
+          </div>
+          <div *ngIf="courses.length === 0" class="card">
+            <p>Brak przypisanych kursów. Przypisz się do kursu w sekcji kursów.</p>
+          </div>
+        </div>
+
+        <h2 class="section-title">Nadchodzące spotkania</h2>
+        <div class="card">
+          <ul *ngIf="upcomingMeetings.length > 0; else noMeetings">
+            <li *ngFor="let meeting of upcomingMeetings">
+              <strong>{{ meeting.course.title }}</strong>: {{ meeting.date | date:'medium' }}
+            </li>
+          </ul>
+          <ng-template #noMeetings>
+            <p>Brak nadchodzących spotkań.</p>
+          </ng-template>
+        </div>
       </section>
     </main>
   </div>
 </div>
-

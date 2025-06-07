@@ -10,7 +10,7 @@ export interface Course {
   id: string;
   title: string;
   description: string;
-  instructor: string;
+  instructor: string; // Używane jako TutorId
   durationHours: number;
   link: string;
   enrolled: boolean;
@@ -18,7 +18,7 @@ export interface Course {
   endDate?: Date;
   recurrencePattern?: string;
   meetingDates: Date[];
-  recurrenceDays: string; // Align with backend CourseDto
+  recurrenceDays: string;
   recurrenceWeeks?: number;
   startTime?: string;
   endTime?: string;
@@ -58,7 +58,7 @@ export class CourseManagementComponent {
     { pl: 'Sobota', en: 'Saturday' },
     { pl: 'Niedziela', en: 'Sunday' }
   ];
-  selectedDays: boolean[] = new Array(this.daysOfWeek.length).fill(false); // Checkbox states
+  selectedDays: boolean[] = new Array(this.daysOfWeek.length).fill(false);
 
   constructor(private http: HttpClient, public authService: AuthService) {
     if (this.authService.isLoggedIn()) {
@@ -105,7 +105,6 @@ export class CourseManagementComponent {
       return;
     }
 
-    // Convert selectedDays to comma-separated English day names
     this.newCourse.recurrenceDays = this.daysOfWeek
       .filter((_, index) => this.selectedDays[index])
       .map(day => day.en)
@@ -140,7 +139,32 @@ export class CourseManagementComponent {
     });
   }
 
-  // Map English day names back to Polish for display
+  assignTutor(course: Course) {
+    if (!this.authService.isTutor()) {
+      alert('Brak uprawnień do przypisania się do kursu!');
+      return;
+    }
+    const userId = this.authService.getUserId();
+    if (!userId) {
+      alert('Błąd: Nie można pobrać ID użytkownika. Zaloguj się ponownie.');
+      return;
+    }
+    this.http.post(`http://localhost:5241/api/courses/${course.id}/assign-tutor`, {}, { headers: this.getAuthHeaders() }).subscribe({
+      next: () => {
+        course.instructor = userId;
+        alert('Przypisano Cię do kursu!');
+      },
+      error: (err) => {
+        console.error('Błąd przypisywania korepetytora:', err);
+        if (err.status === 400) {
+          alert('Kurs ma już przypisanego korepetytora.');
+        } else if (err.status === 403) {
+          alert('Brak uprawnień do przypisania się do kursu.');
+        }
+      }
+    });
+  }
+
   getDisplayDays(recurrenceDays: string): string {
     if (!recurrenceDays) return 'Brak';
     const enDays = recurrenceDays.split(',').map(day => day.trim());
