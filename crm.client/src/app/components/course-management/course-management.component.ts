@@ -18,7 +18,7 @@ export interface Course {
   endDate?: Date;
   recurrencePattern?: string;
   meetingDates: Date[];
-  recurrenceDays: string; // Align with backend CourseDto
+  recurrenceDays: string;
   recurrenceWeeks?: number;
   startTime?: string;
   endTime?: string;
@@ -58,7 +58,7 @@ export class CourseManagementComponent {
     { pl: 'Sobota', en: 'Saturday' },
     { pl: 'Niedziela', en: 'Sunday' }
   ];
-  selectedDays: boolean[] = new Array(this.daysOfWeek.length).fill(false); // Checkbox states
+  selectedDays: boolean[] = new Array(this.daysOfWeek.length).fill(false);
 
   constructor(private http: HttpClient, public authService: AuthService) {
     if (this.authService.isLoggedIn()) {
@@ -105,7 +105,6 @@ export class CourseManagementComponent {
       return;
     }
 
-    // Convert selectedDays to comma-separated English day names
     this.newCourse.recurrenceDays = this.daysOfWeek
       .filter((_, index) => this.selectedDays[index])
       .map(day => day.en)
@@ -140,7 +139,6 @@ export class CourseManagementComponent {
     });
   }
 
-  // Map English day names back to Polish for display
   getDisplayDays(recurrenceDays: string): string {
     if (!recurrenceDays) return 'Brak';
     const enDays = recurrenceDays.split(',').map(day => day.trim());

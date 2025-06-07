@@ -1,0 +1,22 @@
+<div class="attendance-container">
+  <app-sidebar></app-sidebar>
+  <div class="attendance-content">
+    <h2>Lista obecności - {{ courseTitle }}</h2>
+    <div class="form-group">
+      <label for="meetingDate">Wybierz datę spotkania</label>
+      <select id="meetingDate" [(ngModel)]="selectedDate" (change)="loadAttendance()">
+        <option *ngFor="let date of meetingDates" [value]="date.toISOString()">{{ date | date:'medium' }}</option>
+      </select>
+    </div>
+    <div class="attendance-list" *ngIf="attendances.length > 0">
+      <div class="attendance-item" *ngFor="let attendance of attendances">
+        <span>{{ attendance.userName }}</span>
+        <input type="checkbox" [(ngModel)]="attendance.present" (change)="updateAttendance(attendance)">
+      </div>
+    </div>
+    <p *ngIf="attendances.length === 0">Brak zapisanych studentów lub brak obecności dla wybranej daty.</p>
+    <div class="form-actions">
+      <button class="btn btn-cancel" [routerLink]="['/']">Powrót</button>
+    </div>
+  </div>
+</div>

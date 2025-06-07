@@ -88,6 +88,9 @@
               {{ course.enrolled ? 'Wypisz się' : 'Zapisz się' }}
             </button>
             <button *ngIf="authService.isAdmin()" class="btn btn-delete" (click)="deleteCourse(course.id)">Usuń</button>
+            <button *ngIf="authService.isTutor() || authService.isAdmin()" class="btn btn-primary" [routerLink]="['/attendance', course.id]">
+              Lista obecności
+            </button>
           </div>
         </div>
       </div>

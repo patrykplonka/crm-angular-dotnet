@@ -14,6 +14,7 @@ namespace crm.Server.Data
         public DbSet<Course> Courses { get; set; }
         public DbSet<ScheduleEvent> Events { get; set; }
         public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
+        public DbSet<Attendance> Attendances { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -31,6 +32,19 @@ namespace crm.Server.Data
                 .HasOne(ce => ce.Course)
                 .WithMany()
                 .HasForeignKey(ce => ce.CourseId);
+
+            builder.Entity<Attendance>()
+                .HasKey(a => a.Id);
+
+            builder.Entity<Attendance>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId);
+
+            builder.Entity<Attendance>()
+                .HasOne(a => a.Course)
+                .WithMany()
+                .HasForeignKey(a => a.CourseId);
         }
     }
 }

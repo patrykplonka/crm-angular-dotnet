@@ -12,7 +12,7 @@ import { RouterModule } from '@angular/router';
 export class SidebarComponent {
   menuItems = [
     { label: 'Dashboard', path: '/dashboard', icon: 'fas fa-home' },
-    { label: 'Lista obecności', path: '/profile', icon: 'fas fa-user' },
+    { label: 'Listy obecności', path: '/attendance', icon: 'fas fa-user' },
     { label: 'Kursy', path: '/courses', icon: 'fas fa-book' },
   ];
 }
