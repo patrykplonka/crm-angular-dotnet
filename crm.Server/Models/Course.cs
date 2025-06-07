@@ -12,5 +12,7 @@
         public DateTime? EndDate { get; set; }
         public string RecurrencePattern { get; set; }
         public List<DateTime> MeetingDates { get; set; } = new List<DateTime>();
+        public List<ApplicationUser> EnrolledStudents { get; set; } = new();
+        public List<Attendance> Attendances { get; set; } = new();
     }
 }
