@@ -15,6 +15,8 @@ namespace crm.Server.Data
         public DbSet<ScheduleEvent> Events { get; set; }
         public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
 
+        public DbSet<Attendance> Attendances { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
