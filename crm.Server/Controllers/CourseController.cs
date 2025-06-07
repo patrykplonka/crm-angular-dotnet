@@ -56,7 +56,22 @@ namespace crm.Server.Controllers
 
             return Ok(courseDtos);
         }
+        [HttpGet("{courseId}/enrollments")]
+        [Authorize(Roles = "Tutor")]
+        public async Task<ActionResult<IEnumerable<ApplicationUser>>> GetEnrolledStudents(string courseId)
+        {
+            var course = await _context.Courses
+                .Include(c => c.EnrolledStudents)
+                .FirstOrDefaultAsync(c => c.Id == courseId);
 
+            if (course == null)
+                return NotFound("Kurs nie znaleziony.");
+
+            if (course.Instructor != User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                return Forbid();
+
+            return Ok(course.EnrolledStudents);
+        }
         [HttpGet("tutor")]
         [Authorize(Roles = "Tutor")]
         public async Task<ActionResult<List<CourseDto>>> GetTutorCourses()
