@@ -1,10 +1,13 @@
 /* Layout główny */
 .dashboard-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   min-height: 100vh;
   background-color: #f5f7fa;
   overflow-x: hidden;
+  position: relative;
+  padding-top: 60px; /* Wysokość sidebaru na mobilnych */
+  transition: padding-left 0.3s ease;
 }
 
 .dashboard-content {
@@ -13,6 +16,25 @@
   box-sizing: border-box;
   max-width: 100%;
   overflow-x: auto;
+  transition: padding-left 0.3s ease;
+}
+
+@media (min-width: 769px) {
+  .dashboard-container {
+    flex-direction: row;
+  }
+
+  .dashboard-container {
+    padding-top: 0;
+  }
+
+  .dashboard-content {
+    padding-left: 280px; /* Sidebar width (260px) + 20px padding */
+  }
+
+  .sidebar.collapsed ~ .dashboard-container .dashboard-content {
+    padding-left: 90px; /* Collapsed sidebar width (70px) + 20px padding */
+  }
 }
 
 /* Header */

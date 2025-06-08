@@ -10,9 +10,26 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./sidebar.component.css']
 })
 export class SidebarComponent {
+  isCollapsed = false;
+  isMobileMenuOpen = false;
+
   menuItems = [
-    { label: 'Dashboard', path: '/dashboard', icon: 'fas fa-home' },
-    { label: 'Lista obecności', path: '/attendance', icon: 'fas fa-user' },
+    { label: 'Panel', path: '/dashboard', icon: 'fas fa-home' },
     { label: 'Kursy', path: '/courses', icon: 'fas fa-book' },
   ];
+
+  toggleSidebar() {
+    this.isCollapsed = !this.isCollapsed;
+  }
+
+  toggleMobileMenu(event: Event) {
+    event.stopPropagation();
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  closeMobileMenu() {
+    if (this.isMobileMenuOpen) {
+      this.isMobileMenuOpen = false;
+    }
+  }
 }

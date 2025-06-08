@@ -1,13 +1,24 @@
-<nav class="sidebar">
-  <div class="sidebar-header">
-    <h3>Menu</h3>
-  </div>
-  <ul class="sidebar-menu">
-    <li *ngFor="let item of menuItems" class="menu-item">
-      <a [routerLink]="item.path" routerLinkActive="active">
-        <i [class]="item.icon"></i>
-        <span>{{ item.label }}</span>
-      </a>
-    </li>
-  </ul>
-</nav>
+<div class="sidebar-wrapper" (click)="closeMobileMenu()" [class.mobile-open]="isMobileMenuOpen">
+  <nav class="sidebar" [class.collapsed]="isCollapsed" [class.mobile-open]="isMobileMenuOpen">
+    <div class="sidebar-top-wrapper" (click)="toggleMobileMenu($event)">
+      <h3>Platforma e-learning</h3>
+      <div class="mobile-menu-items">
+        <a *ngFor="let item of menuItems" [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }" (click)="closeMobileMenu()">
+          <i [class]="item.icon"></i>
+          <span class="menu-label">{{ item.label }}</span>
+        </a>
+      </div>
+      <button class="hamburger-btn" (click)="toggleMobileMenu($event); $event.stopPropagation()">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+    <ul class="sidebar-menu" [class.mobile-expanded]="isMobileMenuOpen">
+      <li *ngFor="let item of menuItems" class="menu-item">
+        <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }" (click)="closeMobileMenu()">
+          <i [class]="item.icon"></i>
+          <span class="menu-label">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>
