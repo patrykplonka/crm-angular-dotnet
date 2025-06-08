@@ -4,23 +4,23 @@
     <form (ngSubmit)="register()" class="auth-form">
       <div class="form-group">
         <label class="form-label">Imię</label>
-        <input [(ngModel)]="model.firstName" name="FirstName" type="text" class="form-control" required placeholder="Wprowadź imię">
+        <input [(ngModel)]="model.firstName" name="FirstName" type="text" class="form-control form-input" required placeholder="Wprowadź imię">
       </div>
       <div class="form-group">
         <label class="form-label">Nazwisko</label>
-        <input [(ngModel)]="model.lastName" name="LastName" type="text" class="form-control" required placeholder="Wprowadź nazwisko">
+        <input [(ngModel)]="model.lastName" name="LastName" type="text" class="form-control form-input" required placeholder="Wprowadź nazwisko">
       </div>
       <div class="form-group">
         <label class="form-label">Email</label>
-        <input [(ngModel)]="model.email" name="Email" type="email" class="form-control" required placeholder="Wprowadź email">
+        <input [(ngModel)]="model.email" name="Email" type="email" class="form-control form-input" required placeholder="Wprowadź email">
       </div>
       <div class="form-group">
         <label class="form-label">Hasło</label>
-        <input [(ngModel)]="model.password" name="Password" type="password" class="form-control" required placeholder="Wprowadź hasło">
+        <input [(ngModel)]="model.password" name="Password" type="password" class="form-control form-input" required placeholder="Wprowadź hasło">
       </div>
       <div class="form-group">
         <label class="form-label">Rola</label>
-        <select [(ngModel)]="model.role" name="Role" class="form-control" required>
+        <select [(ngModel)]="model.role" name="Role" class="form-control form-input" required>
           <option value="Student">Student</option>
           <option value="Tutor">Korepetytor</option>
           <option value="Admin">Admin</option>
