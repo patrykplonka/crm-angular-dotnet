@@ -43,6 +43,8 @@
               </span>
               <ng-template #noMeeting>Brak</ng-template>
             </p>
+            <a *ngIf="course.id" [routerLink]="['/attendance', course.id]" class="action-btn">Sprawdź obecność</a>
+            <p *ngIf="!course.id" class="error-message">Błąd: Kurs bez ID</p>
           </div>
           <div *ngIf="courses.length === 0" class="card">
             <p>Brak przypisanych kursów. Przypisz się do kursu w sekcji kursów.</p>

@@ -2,10 +2,10 @@
 {
     public class CourseEnrollment
     {
-        public string Id { get; set; }
-        public string UserId { get; set; }
+        public string Id { get; set; } // Zmiana z int na string
         public string CourseId { get; set; }
-        public ApplicationUser User { get; set; }
-        public Course Course { get; set; }
+        public string UserId { get; set; }
+        public virtual Course Course { get; set; }
+        public virtual ApplicationUser User { get; set; }
     }
 }

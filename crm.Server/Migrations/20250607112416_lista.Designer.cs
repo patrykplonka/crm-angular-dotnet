@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using crm.Server.Data;
 
@@ -11,9 +12,11 @@ using crm.Server.Data;
 namespace crm.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250607112416_lista")]
+    partial class lista
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -167,6 +170,9 @@ namespace crm.Server.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CourseId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -217,6 +223,8 @@ namespace crm.Server.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -303,7 +311,6 @@ namespace crm.Server.Migrations
             modelBuilder.Entity("crm.Server.Models.CourseEnrollment", b =>
                 {
                     b.Property<string>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("CourseId")
@@ -409,6 +416,13 @@ namespace crm.Server.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("crm.Server.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("crm.Server.Models.Course", null)
+                        .WithMany("EnrolledStudents")
+                        .HasForeignKey("CourseId");
+                });
+
             modelBuilder.Entity("crm.Server.Models.Attendance", b =>
                 {
                     b.HasOne("crm.Server.Models.Course", "Course")
@@ -465,6 +479,8 @@ namespace crm.Server.Migrations
             modelBuilder.Entity("crm.Server.Models.Course", b =>
                 {
                     b.Navigation("Attendances");
+
+                    b.Navigation("EnrolledStudents");
                 });
 #pragma warning restore 612, 618
         }

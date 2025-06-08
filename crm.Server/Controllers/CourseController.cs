@@ -24,6 +24,7 @@ namespace crm.Server.Controllers
             _context = context;
         }
 
+        // GET: api/courses
         [HttpGet]
         [Authorize(Roles = "Student,Tutor,Admin")]
         public async Task<ActionResult<List<CourseDto>>> GetCourses()
@@ -35,30 +36,73 @@ namespace crm.Server.Controllers
                 .Select(e => e.CourseId)
                 .ToListAsync();
 
-            var courseDtos = courses.Select(c => new CourseDto
+            var courseDtos = courses.Select(course => new CourseDto
             {
-                Id = c.Id,
-                Title = c.Title,
-                Description = c.Description,
-                Instructor = c.Instructor, // Używane jako TutorId
-                DurationHours = c.DurationHours,
-                Link = c.Link,
-                Enrolled = enrollments.Contains(c.Id),
-                StartDate = c.StartDate,
-                EndDate = c.EndDate,
-                RecurrencePattern = c.RecurrencePattern,
-                MeetingDates = c.MeetingDates,
-                RecurrenceDays = ParseRecurrenceDays(c.RecurrencePattern),
-                RecurrenceWeeks = ParseRecurrenceWeeks(c.RecurrencePattern),
-                StartTime = ParseTime(c.RecurrencePattern, "StartTime"),
-                EndTime = ParseTime(c.RecurrencePattern, "EndTime")
+                Id = course.Id,
+                Title = course.Title,
+                Description = course.Description,
+                Instructor = course.Instructor,
+                DurationHours = course.DurationHours,
+                Link = course.Link,
+                Enrolled = enrollments.Contains(course.Id),
+                StartDate = course.StartDate,
+                EndDate = course.EndDate,
+                RecurrencePattern = course.RecurrencePattern,
+                MeetingDates = course.MeetingDates,
+                RecurrenceDays = ParseRecurrenceDays(course.RecurrencePattern),
+                RecurrenceWeeks = ParseRecurrenceWeeks(course.RecurrencePattern),
+                StartTime = ParseTime(course.RecurrencePattern, "StartTime"),
+                EndTime = ParseTime(course.RecurrencePattern, "EndTime")
             }).ToList();
 
             return Ok(courseDtos);
         }
+
+        // GET: api/courses/{courseId}
+        [HttpGet("{courseId}")]
+        [Authorize(Roles = "Tutor,Admin")]
+        public async Task<ActionResult<CourseDto>> GetCourse(string courseId)
+        {
+            var course = await _context.Courses
+                .FirstOrDefaultAsync(c => c.Id == courseId);
+
+            if (course == null)
+            {
+                return NotFound("Kurs nie znaleziony.");
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (course.Instructor != userId && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+
+            var courseDto = new CourseDto
+            {
+                Id = course.Id,
+                Title = course.Title,
+                Description = course.Description,
+                Instructor = course.Instructor,
+                DurationHours = course.DurationHours,
+                Link = course.Link,
+                Enrolled = false,
+                StartDate = course.StartDate,
+                EndDate = course.EndDate,
+                RecurrencePattern = course.RecurrencePattern,
+                MeetingDates = course.MeetingDates,
+                RecurrenceDays = ParseRecurrenceDays(course.RecurrencePattern),
+                RecurrenceWeeks = ParseRecurrenceWeeks(course.RecurrencePattern),
+                StartTime = ParseTime(course.RecurrencePattern, "StartTime"),
+                EndTime = ParseTime(course.RecurrencePattern, "EndTime")
+            };
+
+            return Ok(courseDto);
+        }
+
+        // GET: api/courses/{courseId}/enrollments
         [HttpGet("{courseId}/enrollments")]
-        [Authorize(Roles = "Tutor")]
-        public async Task<ActionResult<IEnumerable<ApplicationUser>>> GetEnrolledStudents(string courseId)
+        [Authorize(Roles = "Tutor,Admin")]
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetEnrollments(string courseId)
         {
             var course = await _context.Courses
                 .Include(c => c.EnrolledStudents)
@@ -67,11 +111,117 @@ namespace crm.Server.Controllers
             if (course == null)
                 return NotFound("Kurs nie znaleziony.");
 
-            if (course.Instructor != User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (course.Instructor != userId && !User.IsInRole("Admin"))
                 return Forbid();
 
-            return Ok(course.EnrolledStudents);
+            var userDtos = course.EnrolledStudents.Select(user => new UserDto
+            {
+                Id = user.Id,
+                Username = user.UserName,
+                Email = user.Email,
+                Role = user.Role,
+                FirstName = user.FirstName,
+                LastName = user.LastName
+            }).ToList();
+
+            return Ok(userDtos);
         }
+
+        // GET: api/courses/{courseId}/attendance
+        [HttpGet("{courseId}/attendance")]
+        [Authorize(Roles = "Tutor,Admin")]
+        [HttpGet("{courseId}/attendance")]
+        [Authorize(Roles = "Tutor,Admin")]
+        public async Task<ActionResult<IEnumerable<Attendance>>> GetAttendance(string courseId, [FromQuery] string meetingDate)
+        {
+            if (!DateTime.TryParse(meetingDate, out var date))
+                return BadRequest("Nieprawidłowy format daty.");
+
+            var course = await _context.Courses
+                .Include(c => c.EnrolledStudents)
+                .FirstOrDefaultAsync(c => c.Id == courseId);
+
+            if (course == null)
+                return NotFound("Kurs nie znaleziony.");
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (course.Instructor != userId && !User.IsInRole("Admin"))
+                return Forbid();
+
+            var attendances = await _context.Attendances
+                .Where(a => a.CourseId == courseId && a.MeetingDate.Date == date.Date)
+                .ToListAsync();
+
+            if (!attendances.Any() && course.EnrolledStudents.Any())
+            {
+                foreach (var student in course.EnrolledStudents)
+                {
+                    var attendance = new Attendance
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        CourseId = courseId,
+                        StudentId = student.Id,
+                        MeetingDate = date,
+                        IsPresent = false
+                    };
+                    _context.Attendances.Add(attendance);
+                    attendances.Add(attendance);
+                }
+                await _context.SaveChangesAsync();
+                Console.WriteLine($"Created {attendances.Count} attendance records for {date}");
+            }
+
+            return Ok(attendances);
+        }
+
+        // POST: api/courses/{courseId}/attendance
+        [HttpPost("{courseId}/attendance")]
+        [Authorize(Roles = "Tutor,Admin")]
+        public async Task<IActionResult> SaveAttendance(string courseId, [FromBody] List<Attendance> attendances)
+        {
+            var course = await _context.Courses
+                .FirstOrDefaultAsync(c => c.Id == courseId);
+
+            if (course == null)
+            {
+                return NotFound("Kurs nie znaleziony.");
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (course.Instructor != userId && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+
+            foreach (var attendance in attendances)
+            {
+                if (attendance.CourseId != courseId)
+                {
+                    return BadRequest("Nieprawidłowy CourseId.");
+                }
+
+                var existingAttendance = await _context.Attendances
+                    .FirstOrDefaultAsync(a => a.Id == attendance.Id && a.CourseId == courseId && a.StudentId == attendance.StudentId && a.MeetingDate.Date == attendance.MeetingDate.Date);
+
+                if (existingAttendance == null)
+                {
+                    attendance.Id = Guid.NewGuid().ToString();
+                    _context.Attendances.Add(attendance);
+                }
+                else
+                {
+                    existingAttendance.IsPresent = attendance.IsPresent;
+                    existingAttendance.MeetingDate = attendance.MeetingDate;
+                    _context.Attendances.Update(existingAttendance);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { Message = "Obecność zapisana pomyślnie." });
+        }
+
+        // GET: api/courses/tutor
         [HttpGet("tutor")]
         [Authorize(Roles = "Tutor")]
         public async Task<ActionResult<List<CourseDto>>> GetTutorCourses()
@@ -81,28 +231,29 @@ namespace crm.Server.Controllers
                 .Where(c => c.Instructor == userId)
                 .ToListAsync();
 
-            var courseDtos = courses.Select(c => new CourseDto
+            var courseDtos = courses.Select(course => new CourseDto
             {
-                Id = c.Id,
-                Title = c.Title,
-                Description = c.Description,
-                Instructor = c.Instructor,
-                DurationHours = c.DurationHours,
-                Link = c.Link,
-                Enrolled = false, // Korepetytor nie jest zapisany jako student
-                StartDate = c.StartDate,
-                EndDate = c.EndDate,
-                RecurrencePattern = c.RecurrencePattern,
-                MeetingDates = c.MeetingDates,
-                RecurrenceDays = ParseRecurrenceDays(c.RecurrencePattern),
-                RecurrenceWeeks = ParseRecurrenceWeeks(c.RecurrencePattern),
-                StartTime = ParseTime(c.RecurrencePattern, "StartTime"),
-                EndTime = ParseTime(c.RecurrencePattern, "EndTime")
+                Id = course.Id,
+                Title = course.Title,
+                Description = course.Description,
+                Instructor = course.Instructor,
+                DurationHours = course.DurationHours,
+                Link = course.Link,
+                Enrolled = false,
+                StartDate = course.StartDate,
+                EndDate = course.EndDate,
+                RecurrencePattern = course.RecurrencePattern,
+                MeetingDates = course.MeetingDates,
+                RecurrenceDays = ParseRecurrenceDays(course.RecurrencePattern),
+                RecurrenceWeeks = ParseRecurrenceWeeks(course.RecurrencePattern),
+                StartTime = ParseTime(course.RecurrencePattern, "StartTime"),
+                EndTime = ParseTime(course.RecurrencePattern, "EndTime")
             }).ToList();
 
             return Ok(courseDtos);
         }
 
+        // POST: api/courses/{courseId}/assign-tutor
         [HttpPost("{courseId}/assign-tutor")]
         [Authorize(Roles = "Tutor")]
         public async Task<IActionResult> AssignTutor(string courseId)
@@ -112,20 +263,21 @@ namespace crm.Server.Controllers
 
             if (course == null)
             {
-                return NotFound("Kurs nie znaleziony");
+                return NotFound("Kurs nie znaleziony.");
             }
 
             if (!string.IsNullOrEmpty(course.Instructor))
             {
-                return BadRequest("Kurs ma już przypisanego korepetytora");
+                return BadRequest("Kurs ma już przypisanego korepetytora.");
             }
 
             course.Instructor = userId;
             await _context.SaveChangesAsync();
 
-            return Ok(new { Message = "Korepetytor przypisany do kursu" });
+            return Ok(new { CourseId = course.Id, Message = "Korepetytor przypisany do kursu." });
         }
 
+        // POST: api/courses
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<CourseDto>> AddCourse([FromBody] CourseDto courseDto)
@@ -147,7 +299,7 @@ namespace crm.Server.Controllers
             // Validate time format
             if (!TimeSpan.TryParse(courseDto.StartTime, out _) || !TimeSpan.TryParse(courseDto.EndTime, out _))
             {
-                return BadRequest("Nieprawidłowy format czasu dla StartTime lub EndTime.");
+                return BadRequest("Nieprawidłowy format dla StartTime lub EndTime.");
             }
 
             // Validate recurrence days
@@ -163,7 +315,7 @@ namespace crm.Server.Controllers
                 Id = Guid.NewGuid().ToString(),
                 Title = courseDto.Title,
                 Description = courseDto.Description,
-                Instructor = courseDto.Instructor, // Może być null, jeśli admin nie przypisze korepetytora
+                Instructor = courseDto.Instructor,
                 DurationHours = courseDto.DurationHours,
                 Link = courseDto.Link,
                 StartDate = courseDto.StartDate,
@@ -182,10 +334,15 @@ namespace crm.Server.Controllers
             return CreatedAtAction(nameof(GetCourses), new { id = course.Id }, courseDto);
         }
 
+        // GET: api/courses/test
         [HttpGet("test")]
         [AllowAnonymous]
-        public IActionResult Test() => Ok("CourseController is working");
+        public IActionResult Test()
+        {
+            return Ok("CourseController is working");
+        }
 
+        // DELETE: api/courses/{id}
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCourse(string id)
@@ -201,6 +358,7 @@ namespace crm.Server.Controllers
             return NoContent();
         }
 
+        // POST: api/courses/{courseId}/enroll
         [HttpPost("{courseId}/enroll")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> ToggleEnrollment(string courseId, [FromBody] EnrollmentActionDto action)
@@ -254,20 +412,24 @@ namespace crm.Server.Controllers
         {
             var meetingDates = new List<DateTime>();
             if (string.IsNullOrEmpty(courseDto.RecurrenceDays) || courseDto.RecurrenceWeeks == null || courseDto.RecurrenceWeeks <= 0)
+            {
                 return meetingDates;
+            }
 
             var days = courseDto.RecurrenceDays.Split(',').Select(d => Enum.Parse<DayOfWeek>(d.Trim())).ToList();
-            var startDate = courseDto.StartDate.Date;
+            var startDate = courseDto.StartDate;
             var startTime = TimeSpan.Parse(courseDto.StartTime);
             var weeks = courseDto.RecurrenceWeeks.Value;
 
-            for (int week = 0; week < weeks; week++)
+            for (int i = 0; i < weeks; i++)
             {
                 foreach (var day in days)
                 {
-                    var nextDate = startDate.AddDays(week * 7);
+                    var nextDate = startDate.AddDays(i * 7);
                     while (nextDate.DayOfWeek != day)
+                    {
                         nextDate = nextDate.AddDays(1);
+                    }
                     meetingDates.Add(nextDate + startTime);
                 }
             }
@@ -275,35 +437,55 @@ namespace crm.Server.Controllers
             return meetingDates.OrderBy(d => d).ToList();
         }
 
-        private string ParseRecurrenceDays(string pattern)
+        private static string ParseRecurrenceDays(string pattern)
         {
-            if (string.IsNullOrEmpty(pattern)) return "";
+            if (string.IsNullOrEmpty(pattern)) return null;
             var parts = pattern.Split(';');
             var daysPart = parts.FirstOrDefault(p => p.StartsWith("Days:"));
             return daysPart?.Replace("Days:", "") ?? "";
         }
 
-        private int? ParseRecurrenceWeeks(string pattern)
+        private static int? ParseRecurrenceWeeks(string pattern)
         {
             if (string.IsNullOrEmpty(pattern)) return null;
             var parts = pattern.Split(';');
             var weeksPart = parts.FirstOrDefault(p => p.StartsWith("DurationWeeks:"));
             if (weeksPart != null && int.TryParse(weeksPart.Replace("DurationWeeks:", ""), out int weeks))
+            {
                 return weeks;
+            }
             return null;
         }
 
-        private string ParseTime(string pattern, string timeType)
+        private static string ParseTime(string pattern, string timeType)
         {
             if (string.IsNullOrEmpty(pattern)) return "";
             var parts = pattern.Split(';');
             var timePart = parts.FirstOrDefault(p => p.StartsWith($"{timeType}:"));
-            return timePart?.Replace($"{timeType}:", "") ?? "";
+            return timePart != null ? timePart.Replace($"{timeType}:", "") : null;
         }
     }
 
     public class EnrollmentActionDto
     {
         public string Action { get; set; }
+    }
+
+    public class UserDto
+    {
+        public string Id { get; set; }
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+    }
+    public class AttendanceDto
+    {
+        public string Id { get; set; }
+        public string CourseId { get; set; }
+        public string StudentId { get; set; }
+        public DateTime MeetingDateTime { get; set; }
+        public bool IsPresent { get; set; }
     }
 }
