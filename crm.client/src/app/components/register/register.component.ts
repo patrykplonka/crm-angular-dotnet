@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { RegisterModel } from '../../models/register.model';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-register',
@@ -17,10 +18,18 @@ export class RegisterComponent {
   constructor(private authService: AuthService) { }
 
   register() {
-    console.log('Register model before submission:', this.model); // Debug: Log model
+    console.log('Register model before submission:', this.model);
     this.authService.register(this.model).subscribe({
       next: () => {
-        alert('Zarejestrowano!');
+        Swal.fire({
+          title: 'Sukces!',
+          text: 'Zarejestrowano!',
+          icon: 'success',
+          confirmButtonText: 'OK',
+          customClass: {
+            popup: 'modern-popup'
+          }
+        });
         console.log('Registration successful');
       },
       error: (err) => {
@@ -33,7 +42,15 @@ export class RegisterComponent {
           errorMessage = err.message;
         }
         console.error('Błąd rejestracji:', err);
-        alert(`Próba rejestracji zakończona niepowodzeniem: ${errorMessage}`);
+        Swal.fire({
+          title: 'Błąd!',
+          text: `Próba rejestracji zakończona niepowodzeniem: ${errorMessage}`,
+          icon: 'error',
+          confirmButtonText: 'OK',
+          customClass: {
+            popup: 'modern-popup'
+          }
+        });
       }
     });
   }
