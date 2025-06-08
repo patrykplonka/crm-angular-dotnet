@@ -8,13 +8,15 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Usuniêto powielone AddControllers
 builder.Services.AddControllers()
     .AddApplicationPart(typeof(crm.Server.Controllers.CourseController).Assembly);
 
+// Konfiguracja bazy danych
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Konfiguracja Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = false;
@@ -26,11 +28,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
+// Konfiguracja JWT
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
+})
+.AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -44,17 +48,19 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Konfiguracja CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://localhost:60108", "http://localhost:60108")
+        policy.WithOrigins("http://localhost:60108", "https://localhost:60108")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
 });
 
+// Dodaj Swagger
 builder.Services.AddEndpointsApiExplorer();
 
 
@@ -62,9 +68,10 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-
+   
 }
 
+app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();

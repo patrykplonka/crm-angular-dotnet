@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { ProfilComponent } from './components/profil/profil.component';
 import { CourseManagementComponent } from './components/course-management/course-management.component';
 
 export const routes: Routes = [
@@ -9,7 +10,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'dashboard', component: DashboardComponent },
-  { path: '**', redirectTo: '/login' },
+  { path: 'profil', component: ProfilComponent },
   { path: 'courses', component: CourseManagementComponent },
-  { path: '', redirectTo: '/dashboard', pathMatch: 'full' }, 
+  { path: '**', redirectTo: '/login' } 
 ];

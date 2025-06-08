@@ -12,8 +12,8 @@ namespace crm.Server.Models
         [Required]
         public string Description { get; set; }
         public string Instructor { get; set; }
-        [Required]
-        public string Endpoint { get; set; }
+    
+        //public string Endpoint { get; set; }
         public int DurationHours { get; set; }
     }
 }
