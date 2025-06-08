@@ -9,13 +9,14 @@
     </header>
 
     <main>
-
       <section class="attendance-section">
         <div class="card">
           <div class="form-group">
             <label for="meetingDate">Wybierz datę spotkania</label>
             <select id="meetingDate" [(ngModel)]="selectedMeetingDate" (ngModelChange)="onDateChange()">
-              <option *ngFor="let date of meetingDates" [ngValue]="date">{{ date | date:'mediumDate' }}</option>
+              <option *ngFor="let meeting of meetingDates" [ngValue]="meeting.date">
+                {{ courseTitle }} - {{ meeting.date | date:'mediumDate' }} {{ meeting.startTime }} - {{ meeting.endTime }}
+              </option>
             </select>
           </div>
 

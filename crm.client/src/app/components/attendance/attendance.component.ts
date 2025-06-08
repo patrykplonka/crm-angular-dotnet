@@ -17,12 +17,11 @@ import { Attendance, User } from '../../models/attendance.model';
 export class AttendanceComponent implements OnInit {
   courseId: string | null = null;
   courseTitle: string = '';
-  meetingDates: Date[] = [];
+  meetingDates: { date: Date; startTime: string; endTime: string }[] = [];
   selectedMeetingDate: Date | null = null;
   enrolledStudents: User[] = [];
   attendances: Attendance[] = [];
   errorMessage: string = '';
-  debugInfo: string[] = [];
 
   constructor(
     private http: HttpClient,
@@ -34,17 +33,10 @@ export class AttendanceComponent implements OnInit {
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       this.courseId = params.get('courseId');
-      this.debugInfo.push(`CourseId z URL: ${this.courseId}`);
-      this.debugInfo.push(`IsTutor: ${this.authService.isTutor()}`);
-      this.debugInfo.push(`Token: ${this.authService.getToken()?.substring(0, 20)}...`);
-      console.log('AttendanceComponent Init:', this.debugInfo);
-
       if (this.courseId && this.authService.isTutor()) {
         this.loadCourseDetails();
       } else {
-        this.errorMessage = `Brak dostępu lub nieprawidłowy kurs. courseId: ${this.courseId}, isTutor: ${this.authService.isTutor()}`;
-        this.debugInfo.push(this.errorMessage);
-        console.error(this.errorMessage);
+        this.errorMessage = 'Brak dostępu lub nieprawidłowy kurs.';
         if (!this.courseId) {
           this.router.navigate(['/dashboard']);
         }
@@ -54,25 +46,15 @@ export class AttendanceComponent implements OnInit {
 
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
-    if (!token) {
-      this.errorMessage = 'Brak tokenu autoryzacji.';
-      this.debugInfo.push(this.errorMessage);
-      console.error(this.errorMessage);
-      return new HttpHeaders();
-    }
-    const headers = new HttpHeaders({
+    return token ? new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
-    });
-    this.debugInfo.push(`Nagłówki: Authorization=Bearer ${token.substring(0, 20)}...`);
-    return headers;
+    }) : new HttpHeaders();
   }
 
   loadCourseDetails() {
     if (!this.courseId) return;
 
-    this.debugInfo.push(`Wysyłanie GET /api/courses/${this.courseId}`);
-    console.log('loadCourseDetails:', this.courseId);
     this.http.get<{
       id: string;
       title: string;
@@ -94,25 +76,22 @@ export class AttendanceComponent implements OnInit {
       { headers: this.getAuthHeaders() }
     ).subscribe({
       next: (data) => {
-        this.debugInfo.push(`Odpowiedź GET /api/courses/${this.courseId}: ${JSON.stringify(data, null, 2)}`);
-        console.log('Course Details:', data);
         this.courseTitle = data.title;
-        this.meetingDates = data.meetingDates.map(d => new Date(d));
-        this.debugInfo.push(`Załadowano ${this.meetingDates.length} dat spotkań`);
-        this.selectedMeetingDate = this.meetingDates.find(d => d >= new Date()) || this.meetingDates[0];
+        this.meetingDates = data.meetingDates.map(d => ({
+          date: new Date(d),
+          startTime: data.startTime || 'N/A',
+          endTime: data.endTime || 'N/A'
+        }));
+        this.selectedMeetingDate = this.meetingDates.find(m => m.date >= new Date())?.date || this.meetingDates[0]?.date;
         if (this.selectedMeetingDate) {
           this.loadAttendance(this.selectedMeetingDate);
         } else {
-          this.debugInfo.push('Brak dostępnych dat spotkań');
           this.errorMessage = 'Brak zaplanowanych spotkań dla tego kursu.';
         }
         this.loadEnrolledStudents();
       },
       error: (err) => {
-        const errMsg = `Błąd ładowania szczegółów kursu: Status=${err.status}, Message=${err.error?.message || err.statusText}`;
-        this.errorMessage = errMsg;
-        this.debugInfo.push(errMsg);
-        console.error(errMsg, err);
+        this.errorMessage = `Błąd ładowania szczegółów kursu: ${err.statusText}`;
       }
     });
   }
@@ -120,18 +99,13 @@ export class AttendanceComponent implements OnInit {
   loadEnrolledStudents() {
     if (!this.courseId) return;
 
-    this.debugInfo.push(`Wysyłanie GET /api/courses/${this.courseId}/enrollments`);
-    console.log('loadEnrolledStudents:', this.courseId);
     this.http.get<User[]>(
       `http://localhost:5241/api/courses/${this.courseId}/enrollments`,
       { headers: this.getAuthHeaders() }
     ).subscribe({
       next: (students) => {
-        this.debugInfo.push(`Odpowiedź GET /api/courses/${this.courseId}/enrollments: ${students.length} uczniów`);
-        console.log('Enrolled Students:', students);
         this.enrolledStudents = students;
         if (students.length === 0) {
-          this.debugInfo.push('Brak zapisanych uczniów na kurs');
           this.errorMessage = 'Brak zapisanych uczniów na ten kurs.';
         }
         if (this.selectedMeetingDate) {
@@ -139,10 +113,7 @@ export class AttendanceComponent implements OnInit {
         }
       },
       error: (err) => {
-        const errMsg = `Błąd ładowania uczniów: Status=${err.status}, Message=${err.error?.message || err.statusText}`;
-        this.errorMessage = errMsg;
-        this.debugInfo.push(errMsg);
-        console.error(errMsg, err);
+        this.errorMessage = `Błąd ładowania uczniów: ${err.statusText}`;
       }
     });
   }
@@ -151,23 +122,18 @@ export class AttendanceComponent implements OnInit {
     if (!this.courseId) return;
 
     const dateStr = meetingDate.toISOString().split('T')[0];
-    this.debugInfo.push(`Wysyłanie GET /api/courses/${this.courseId}/attendance?meetingDate=${dateStr}`);
-    console.log('loadAttendance:', dateStr);
     this.http.get<Attendance[]>(
       `http://localhost:5241/api/courses/${this.courseId}/attendance?meetingDate=${dateStr}`,
       { headers: this.getAuthHeaders() }
     ).subscribe({
       next: (attendances) => {
-        this.debugInfo.push(`Odpowiedź GET /api/courses/${this.courseId}/attendance: ${attendances.length} rekordów`);
-        console.log('Attendance:', attendances);
         this.attendances = attendances.map(a => ({
           ...a,
           meetingDate: new Date(a.meetingDate)
         }));
         if (attendances.length === 0 && this.enrolledStudents.length > 0) {
-          this.debugInfo.push('Inicjalizacja obecności dla uczniów');
           this.attendances = this.enrolledStudents.map(s => ({
-            id: crypto.randomUUID(), // Generowanie unikalnego id
+            id: crypto.randomUUID(),
             courseId: this.courseId!,
             studentId: s.id,
             meetingDate: meetingDate,
@@ -176,14 +142,9 @@ export class AttendanceComponent implements OnInit {
         }
       },
       error: (err) => {
-        const errMsg = `Błąd ładowania obecności: Status=${err.status}, Message=${err.error?.message || err.statusText}`;
-        this.errorMessage = errMsg;
-        this.debugInfo.push(errMsg);
-        console.error(errMsg, err);
         if (this.enrolledStudents.length > 0) {
-          this.debugInfo.push('Inicjalizacja obecności dla uczniów z powodu błędu');
           this.attendances = this.enrolledStudents.map(s => ({
-            id: crypto.randomUUID(), // Generowanie unikalnego id
+            id: crypto.randomUUID(),
             courseId: this.courseId!,
             studentId: s.id,
             meetingDate: meetingDate,
@@ -197,12 +158,8 @@ export class AttendanceComponent implements OnInit {
   saveAttendance() {
     if (!this.selectedMeetingDate || !this.courseId) {
       this.errorMessage = 'Wybierz datę spotkania.';
-      this.debugInfo.push(this.errorMessage);
-      console.error(this.errorMessage);
       return;
     }
-    this.debugInfo.push(`Wysyłanie POST /api/courses/${this.courseId}/attendance z ${this.attendances.length} rekordami`);
-    console.log('saveAttendance:', this.attendances);
     this.http.post(
       `http://localhost:5241/api/courses/${this.courseId}/attendance`,
       this.attendances.map(a => ({
@@ -212,24 +169,17 @@ export class AttendanceComponent implements OnInit {
       { headers: this.getAuthHeaders() }
     ).subscribe({
       next: () => {
-        this.debugInfo.push('Obecność zapisana pomyślnie');
-        console.log('Attendance Saved');
         alert('Obecność zapisana pomyślnie!');
         this.errorMessage = '';
       },
       error: (err) => {
-        const errMsg = `Błąd zapisywania obecności: Status=${err.status}, Message=${err.error?.message || err.statusText}`;
-        this.errorMessage = errMsg;
-        this.debugInfo.push(errMsg);
-        console.error(errMsg, err);
+        this.errorMessage = `Błąd zapisywania obecności: ${err.statusText}`;
       }
     });
   }
 
   onDateChange() {
     if (this.selectedMeetingDate) {
-      this.debugInfo.push(`Zmiana daty na: ${this.selectedMeetingDate.toISOString()}`);
-      console.log('onDateChange:', this.selectedMeetingDate);
       this.loadAttendance(this.selectedMeetingDate);
     }
   }
