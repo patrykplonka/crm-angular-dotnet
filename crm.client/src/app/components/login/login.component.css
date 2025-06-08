@@ -3,18 +3,19 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: white;
+  background: linear-gradient(to right, #f8f9fa, #e3f2fd);
   padding: 20px;
 }
 
 .auth-card {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
   border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   padding: 30px;
   width: 100%;
-  max-width: 380px;
-  backdrop-filter: blur(8px);
+  max-width: 400px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -40,16 +41,17 @@
 .form-group {
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 
-  .form-group label {
-    font-size: 13px;
-    color: #34495e;
-    margin-bottom: 6px;
-    font-weight: 500;
-  }
+.form-label {
+  font-size: 13px;
+  color: #34495e;
+  font-weight: 500;
+}
 
 .form-input {
+  background: #f8f9fa;
   padding: 10px;
   font-size: 15px;
   border: 1px solid #ccd1d9;
@@ -73,14 +75,14 @@
 }
 
 .btn-primary {
-  background: #6c757d;
+  background: linear-gradient(to right, #007bff, #0056b3);
   color: white;
-  font-weight: 500;
+  font-weight: 600;
 }
 
   .btn-primary:hover {
-    background: #5a6268;
-    transform: translateY(-2px);
+    background: linear-gradient(to right, #0056b3, #003f7f);
+    transform: translateY(-3px);
   }
 
 .btn-link {
@@ -88,6 +90,8 @@
   color: #007bff;
   font-size: 13px;
   text-decoration: none;
+  margin-top: 10px;
+  text-align: center;
 }
 
   .btn-link:hover {

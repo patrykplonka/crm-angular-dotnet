@@ -4,14 +4,15 @@
     <form (ngSubmit)="login()" class="auth-form">
       <div class="form-group">
         <label class="form-label">Email</label>
-        <input [(ngModel)]="model.email" name="Email" type="email" class="form-control" required placeholder="Wprowadź email">
+        <input [(ngModel)]="model.email" name="Email" type="email" class="form-control form-input" required placeholder="Wprowadź email">
       </div>
       <div class="form-group">
         <label class="form-label">Hasło</label>
-        <input [(ngModel)]="model.password" name="Password" type="password" class="form-control" required placeholder="Wprowadź hasło">
+        <input [(ngModel)]="model.password" name="Password" type="password" class="form-control form-input" required placeholder="Wprowadź hasło">
       </div>
       <button type="submit" class="btn btn-primary">Zaloguj</button>
       <button type="button" routerLink="/register" class="btn btn-link">Zarejestruj się</button>
     </form>
   </div>
 </div>
+
