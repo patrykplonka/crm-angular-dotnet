@@ -1,0 +1,49 @@
+<div class="attendance-container">
+  <app-sidebar></app-sidebar>
+
+  <div class="attendance-content">
+    <header class="attendance-header">
+      <h1 class="text-2xl font-bold text-gray-800 mb-1">Lista obecności: {{ courseTitle || 'Brak kursu' }}</h1>
+      <p class="text-sm text-gray-500">Sprawdź obecność uczniów na spotkaniach</p>
+      <a routerLink="/dashboard" class="back-btn">Powrót do dashboardu</a>
+    </header>
+
+    <main>
+      <section class="attendance-section">
+        <div class="card">
+          <div class="form-group">
+            <label for="meetingDate">Wybierz datę spotkania</label>
+            <select id="meetingDate" [(ngModel)]="selectedMeetingDate" (ngModelChange)="onDateChange()">
+              <option *ngFor="let meeting of meetingDates" [ngValue]="meeting.date">
+                {{ courseTitle }} - {{ meeting.date | date:'mediumDate' }} {{ meeting.startTime }} - {{ meeting.endTime }}
+              </option>
+            </select>
+          </div>
+
+          <table class="attendance-table">
+            <thead>
+              <tr>
+                <th>Uczeń</th>
+                <th>Obecność</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let attendance of attendances">
+                <td>{{ getStudentName(attendance.studentId) }}</td>
+                <td>
+                  <input type="checkbox" [(ngModel)]="attendance.isPresent">
+                </td>
+              </tr>
+              <tr *ngIf="attendances.length === 0">
+                <td colspan="2">Brak uczniów na to spotkanie.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <button class="save-btn" (click)="saveAttendance()" [disabled]="!selectedMeetingDate">Zapisz obecność</button>
+          <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>

@@ -1,15 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { AuthService } from '../../services/auth.service';
 
-export interface Course {
+interface Course {
   id: string;
   title: string;
   description: string;
-  instructor: string; // Używane jako TutorId
+  instructor: string;
   durationHours: number;
   link: string;
   enrolled: boolean;
@@ -23,22 +23,36 @@ export interface Course {
   endTime?: string;
 }
 
+interface Meeting {
+  course: Course;
+  date: Date;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, HttpClientModule, SidebarComponent],
+  imports: [CommonModule, RouterModule, SidebarComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
   courses: Course[] = [];
-  upcomingMeetings: { course: Course, date: Date }[] = [];
+  upcomingMeetings: Meeting[] = [];
+  daysOfWeek: { pl: string; en: string }[] = [
+    { pl: 'Poniedziałek', en: 'Monday' },
+    { pl: 'Wtorek', en: 'Tuesday' },
+    { pl: 'Środa', en: 'Wednesday' },
+    { pl: 'Czwartek', en: 'Thursday' },
+    { pl: 'Piątek', en: 'Friday' },
+    { pl: 'Sobota', en: 'Saturday' },
+    { pl: 'Niedziela', en: 'Sunday' }
+  ];
 
   constructor(private http: HttpClient, public authService: AuthService) { }
 
   ngOnInit() {
-    if (this.authService.isLoggedIn() && this.authService.isTutor()) {
-      this.loadTutorCourses();
+    if (this.authService.isLoggedIn()) {
+      this.loadCourses();
     }
   }
 
@@ -49,57 +63,48 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  loadTutorCourses() {
-    this.http.get<Course[]>('http://localhost:5241/api/courses/tutor', { headers: this.getAuthHeaders() }).subscribe({
+  loadCourses() {
+    this.http.get<Course[]>('http://localhost:5241/api/courses', { headers: this.getAuthHeaders() }).subscribe({
       next: (data) => {
-        this.courses = data.map(course => ({
-          ...course,
-          startDate: new Date(course.startDate),
-          endDate: course.endDate ? new Date(course.endDate) : undefined,
-          meetingDates: course.meetingDates.map(d => new Date(d)),
-          recurrenceDays: course.recurrenceDays || ''
-        }));
-        this.calculateUpcomingMeetings();
+        this.courses = data
+          .filter(c => c.instructor === this.authService.getUserId())
+          .map(course => ({
+            ...course,
+            startDate: new Date(course.startDate),
+            endDate: course.endDate ? new Date(course.endDate) : undefined,
+            meetingDates: course.meetingDates.map(d => new Date(d)),
+            recurrenceDays: course.recurrenceDays || ''
+          }));
+        console.log('Dashboard Loaded Courses:', this.courses.map(c => ({ id: c.id, title: c.title })));
+        if (this.courses.some(c => !c.id)) {
+          console.warn('Dashboard: Niektóre kursy mają nieprawidłowe ID:', this.courses);
+        }
+        this.loadUpcomingMeetings();
       },
       error: (err) => {
-        console.error('Błąd ładowania kursów korepetytora:', err);
-        if (err.status === 401) {
-          alert('Brak autoryzacji. Zaloguj się ponownie.');
-        } else if (err.status === 403) {
-          alert('Brak uprawnień do wyświetlenia kursów.');
-        }
+        console.error('Dashboard Load Courses Error:', err.status, err.statusText, err.message);
       }
     });
   }
 
-  calculateUpcomingMeetings() {
+  loadUpcomingMeetings() {
     const now = new Date();
-    this.upcomingMeetings = [];
-    this.courses.forEach(course => {
-      course.meetingDates
-        .filter(date => date > now)
-        .sort((a, b) => a.getTime() - b.getTime())
-        .slice(0, 5) // Ogranicz do 5 najbliższych spotkań
-        .forEach(date => {
-          this.upcomingMeetings.push({ course, date });
-        });
-    });
+    this.upcomingMeetings = this.courses
+      .flatMap(course =>
+        course.meetingDates
+          .filter(date => date > now)
+          .map(date => ({ course, date }))
+      )
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(0, 5);
+    console.log('Dashboard Upcoming Meetings:', this.upcomingMeetings);
   }
 
   getDisplayDays(recurrenceDays: string): string {
     if (!recurrenceDays) return 'Brak';
-    const daysOfWeek = [
-      { pl: 'Poniedziałek', en: 'Monday' },
-      { pl: 'Wtorek', en: 'Tuesday' },
-      { pl: 'Środa', en: 'Wednesday' },
-      { pl: 'Czwartek', en: 'Thursday' },
-      { pl: 'Piątek', en: 'Friday' },
-      { pl: 'Sobota', en: 'Saturday' },
-      { pl: 'Niedziela', en: 'Sunday' }
-    ];
     const enDays = recurrenceDays.split(',').map(day => day.trim());
     return enDays
-      .map(enDay => daysOfWeek.find(day => day.en === enDay)?.pl || enDay)
+      .map(enDay => this.daysOfWeek.find(day => day.en === enDay)?.pl || enDay)
       .join(', ');
   }
 
