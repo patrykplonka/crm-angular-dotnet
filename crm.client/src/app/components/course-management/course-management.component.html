@@ -84,6 +84,10 @@
             <button *ngIf="authService.isAdmin()" class="action-btn delete-btn" (click)="deleteCourse(course.id)">
               Usuń
             </button>
+            <!-- Przycisk do listy obecności dla korepetytorów i adminów -->
+            <button *ngIf="authService.isTutor() || authService.isAdmin()" class="action-btn attendance-btn" [routerLink]="['/attendance', course.id]">
+              Lista obecności
+            </button>
           </div>
           <div *ngIf="courses.length === 0" class="card">
             <p>Brak dostępnych kursów.</p>

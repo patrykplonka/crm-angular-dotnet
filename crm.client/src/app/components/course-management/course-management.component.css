@@ -1,10 +1,13 @@
 /* Layout główny */
 .course-management-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   min-height: 100vh;
   background-color: #f5f7fa;
   overflow-x: hidden;
+  position: relative;
+  padding-top: 60px; /* Wysokość sidebaru na mobilnych */
+  transition: padding-left 0.3s ease;
 }
 
 .course-content {
@@ -13,6 +16,22 @@
   box-sizing: border-box;
   max-width: 100%;
   overflow-x: auto;
+  transition: padding-left 0.3s ease;
+}
+
+@media (min-width: 769px) {
+  .course-management-container {
+    flex-direction: row;
+  }
+
+  .course-content {
+    padding-left: 280px; /* Sidebar width (260px) + 20px padding */
+    padding-top: 0; /* Usunięcie paddingu górnego na desktopie */
+  }
+
+  .sidebar.collapsed ~ .course-management-container .course-content {
+    padding-left: 90px; /* Collapsed sidebar width (70px) + 20px padding */
+  }
 }
 
 /* Header */
@@ -25,6 +44,8 @@
   margin-bottom: 24px;
   border-radius: 8px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  position: relative;
+  z-index: 10; /* Zapewnia, że header jest nad sidebar */
 }
 
   .course-header h1 {
@@ -89,7 +110,7 @@
 
   .form-group input,
   .form-group textarea {
-    width: block;
+    width: 100%;
     padding: 10px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
@@ -183,12 +204,21 @@
     background-color: #c82333;
   }
 
-.action-btn:not(.assign-btn):not(.delete-btn) {
+.attendance-btn {
+  background-color: #6b7280;
+  color: white;
+}
+
+  .attendance-btn:hover {
+    background-color: #4b5563;
+  }
+
+.action-btn:not(.assign-btn):not(.delete-btn):not(.attendance-btn) {
   background-color: #2563eb;
   color: white;
 }
 
-  .action-btn:not(.assign-btn):not(.delete-btn):hover {
+  .action-btn:not(.assign-btn):not(.delete-btn):not(.attendance-btn):hover {
     background-color: #1d4ed8;
   }
 

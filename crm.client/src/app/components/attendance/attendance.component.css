@@ -1,9 +1,11 @@
 .attendance-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   min-height: 100vh;
   background-color: #f5f7fa;
   overflow-x: hidden;
+  position: relative;
+  transition: padding-left 0.3s ease;
 }
 
 .attendance-content {
@@ -12,8 +14,24 @@
   box-sizing: border-box;
   max-width: 100%;
   overflow-x: auto;
+  transition: padding-left 0.3s ease;
 }
 
+@media (min-width: 769px) {
+  .attendance-container {
+    flex-direction: row;
+  }
+
+  .attendance-content {
+    padding-left: 280px; /* Sidebar width + 20px padding */
+  }
+
+  .sidebar.collapsed ~ .attendance-container .attendance-content {
+    padding-left: 90px; /* Collapsed sidebar width + 20px padding */
+  }
+}
+
+/* Header */
 .attendance-header {
   display: flex;
   justify-content: space-between;
