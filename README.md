@@ -9,11 +9,7 @@ It also includes an admin panel for managing users, lessons, and platform settin
 ## ✨ Features
 
 - 📅 Lesson booking system (students ↔ tutors)  
-- 💬 Real-time chat between users using SignalR  
-- 🔐 User authentication and authorization (JWT)  
-- ⭐ Tutor rating and reviews  
-- 🛠️ Admin panel for platform management  
-- 📊 Dashboard with key statistics and logs  
+- 📊 Dashboard 
 
 ---
 
