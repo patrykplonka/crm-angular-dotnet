@@ -1,3 +1,4 @@
+```html
 <div class="course-management-container">
   <app-sidebar></app-sidebar>
 
@@ -11,7 +12,6 @@
     </header>
 
     <main>
-      <!-- Formularz dodawania kursu (tylko dla Admina) -->
       <section *ngIf="showForm && authService.isAdmin()" class="form-section">
         <h2 class="section-title">Dodaj nowy kurs</h2>
         <div class="card">
@@ -62,7 +62,6 @@
         </div>
       </section>
 
-      <!-- Lista kursów -->
       <section class="course-list">
         <h2 class="section-title">Lista kursów</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -72,19 +71,18 @@
             <p><strong>Czas trwania:</strong> {{ course.durationHours }} godzin</p>
             <p><strong>Harmonogram:</strong> {{ getDisplayDays(course.recurrenceDays) }} przez {{ course.recurrenceWeeks || 0 }} tygodni, {{ course.startTime }}-{{ course.endTime }}</p>
             <p><strong>Korepetytor:</strong> {{ course.instructor ? 'Przypisany' : 'Brak' }}</p>
-            <!-- Przycisk dla studentów -->
+            <p *ngIf="authService.isStudent() && course.enrolled && course.link">
+              <strong>Link do kursu:</strong> <a [href]="course.link" target="_blank" class="course-link">{{ course.link }}</a>
+            </p>
             <button *ngIf="authService.isStudent()" class="action-btn" (click)="toggleEnrollment(course)">
               {{ course.enrolled ? 'Wypisz się' : 'Zapisz się' }}
             </button>
-            <!-- Przycisk dla korepetytorów -->
             <button *ngIf="authService.isTutor() && !course.instructor" class="action-btn assign-btn" (click)="assignTutor(course)">
               Przypisz się
             </button>
-            <!-- Przycisk usuwania dla admina -->
             <button *ngIf="authService.isAdmin()" class="action-btn delete-btn" (click)="deleteCourse(course.id)">
               Usuń
             </button>
-            <!-- Przycisk do listy obecności dla korepetytorów i adminów -->
             <button *ngIf="authService.isTutor() || authService.isAdmin()" class="action-btn attendance-btn" [routerLink]="['/attendance', course.id]">
               Lista obecności
             </button>
@@ -97,3 +95,4 @@
     </main>
   </div>
 </div>
+```

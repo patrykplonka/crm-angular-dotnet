@@ -10,7 +10,7 @@ export interface Course {
   id: string;
   title: string;
   description: string;
-  instructor: string; // Używane jako TutorId
+  instructor: string; 
   durationHours: number;
   link: string;
   enrolled: boolean;
