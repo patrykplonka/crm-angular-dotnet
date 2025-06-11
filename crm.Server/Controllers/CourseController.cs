@@ -24,7 +24,6 @@ namespace crm.Server.Controllers
             _context = context;
         }
 
-        // GET: api/courses
         [HttpGet]
         [Authorize(Roles = "Student,Tutor,Admin")]
         public async Task<ActionResult<List<CourseDto>>> GetCourses()
@@ -58,7 +57,6 @@ namespace crm.Server.Controllers
             return Ok(courseDtos);
         }
 
-        // GET: api/courses/{courseId}
         [HttpGet("{courseId}")]
         [Authorize(Roles = "Tutor,Admin")]
         public async Task<ActionResult<CourseDto>> GetCourse(string courseId)
@@ -99,7 +97,6 @@ namespace crm.Server.Controllers
             return Ok(courseDto);
         }
 
-        // GET: api/courses/{courseId}/enrollments
         [HttpGet("{courseId}/enrollments")]
         [Authorize(Roles = "Tutor,Admin")]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetEnrollments(string courseId)
@@ -128,7 +125,6 @@ namespace crm.Server.Controllers
             return Ok(userDtos);
         }
 
-        // GET: api/courses/{courseId}/attendance
         [HttpGet("{courseId}/attendance")]
         [Authorize(Roles = "Tutor,Admin")]
         [HttpGet("{courseId}/attendance")]
@@ -175,7 +171,6 @@ namespace crm.Server.Controllers
             return Ok(attendances);
         }
 
-        // POST: api/courses/{courseId}/attendance
         [HttpPost("{courseId}/attendance")]
         [Authorize(Roles = "Tutor,Admin")]
         public async Task<IActionResult> SaveAttendance(string courseId, [FromBody] List<Attendance> attendances)
@@ -221,7 +216,6 @@ namespace crm.Server.Controllers
             return Ok(new { Message = "Obecność zapisana pomyślnie." });
         }
 
-        // GET: api/courses/tutor
         [HttpGet("tutor")]
         [Authorize(Roles = "Tutor")]
         public async Task<ActionResult<List<CourseDto>>> GetTutorCourses()
@@ -253,7 +247,6 @@ namespace crm.Server.Controllers
             return Ok(courseDtos);
         }
 
-        // POST: api/courses/{courseId}/assign-tutor
         [HttpPost("{courseId}/assign-tutor")]
         [Authorize(Roles = "Tutor")]
         public async Task<IActionResult> AssignTutor(string courseId)
@@ -277,7 +270,6 @@ namespace crm.Server.Controllers
             return Ok(new { CourseId = course.Id, Message = "Korepetytor przypisany do kursu." });
         }
 
-        // POST: api/courses
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<CourseDto>> AddCourse([FromBody] CourseDto courseDto)
@@ -287,7 +279,6 @@ namespace crm.Server.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Validate required fields
             if (string.IsNullOrEmpty(courseDto.Title) || string.IsNullOrEmpty(courseDto.Description) ||
                 courseDto.DurationHours <= 0 || string.IsNullOrEmpty(courseDto.RecurrenceDays) ||
                 courseDto.RecurrenceWeeks <= 0 || string.IsNullOrEmpty(courseDto.StartTime) ||
@@ -296,13 +287,11 @@ namespace crm.Server.Controllers
                 return BadRequest("Wszystkie wymagane pola muszą być wypełnione.");
             }
 
-            // Validate time format
             if (!TimeSpan.TryParse(courseDto.StartTime, out _) || !TimeSpan.TryParse(courseDto.EndTime, out _))
             {
                 return BadRequest("Nieprawidłowy format dla StartTime lub EndTime.");
             }
 
-            // Validate recurrence days
             var validDays = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
             var days = courseDto.RecurrenceDays.Split(',').Select(d => d.Trim()).ToList();
             if (days.Any(d => !validDays.Contains(d)))
@@ -334,7 +323,6 @@ namespace crm.Server.Controllers
             return CreatedAtAction(nameof(GetCourses), new { id = course.Id }, courseDto);
         }
 
-        // GET: api/courses/test
         [HttpGet("test")]
         [AllowAnonymous]
         public IActionResult Test()
@@ -342,7 +330,6 @@ namespace crm.Server.Controllers
             return Ok("CourseController is working");
         }
 
-        // DELETE: api/courses/{id}
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCourse(string id)
@@ -358,7 +345,6 @@ namespace crm.Server.Controllers
             return NoContent();
         }
 
-        // POST: api/courses/{courseId}/enroll
         [HttpPost("{courseId}/enroll")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> ToggleEnrollment(string courseId, [FromBody] EnrollmentActionDto action)

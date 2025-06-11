@@ -42,7 +42,6 @@ namespace TutoringCRM.Backend.Controllers
                 return BadRequest(new { Errors = modelStateErrors });
             }
 
-            // Validate role
             var validRoles = new[] { "Student", "Tutor", "Admin" };
             if (!validRoles.Contains(model.Role))
             {
@@ -67,7 +66,6 @@ namespace TutoringCRM.Backend.Controllers
                 return BadRequest(new { Errors = identityErrors });
             }
 
-            // Ensure role exists
             if (!await _roleManager.RoleExistsAsync(model.Role))
             {
                 var roleResult = await _roleManager.CreateAsync(new IdentityRole(model.Role));
@@ -79,7 +77,6 @@ namespace TutoringCRM.Backend.Controllers
                 }
             }
 
-            // Assign role to user
             var addToRoleResult = await _userManager.AddToRoleAsync(user, model.Role);
             if (!addToRoleResult.Succeeded)
             {

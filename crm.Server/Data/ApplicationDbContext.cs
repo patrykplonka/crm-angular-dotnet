@@ -20,23 +20,22 @@ namespace crm.Server.Data
         {
             base.OnModelCreating(builder);
 
-            // Relacja wiele-do-wielu między Course a ApplicationUser przez CourseEnrollments
             builder.Entity<Course>()
                 .HasMany(c => c.EnrolledStudents)
-                .WithMany() // Bez właściwości nawigacyjnej po stronie ApplicationUser
+                .WithMany()
                 .UsingEntity<CourseEnrollment>(
                     j => j
                         .HasOne(ce => ce.User)
-                        .WithMany() // Brak odwrotnej nawigacji
+                        .WithMany() 
                         .HasForeignKey(ce => ce.UserId),
                     j => j
                         .HasOne(ce => ce.Course)
-                        .WithMany() // Brak odwrotnej nawigacji
+                        .WithMany() 
                         .HasForeignKey(ce => ce.CourseId),
                     j =>
                     {
-                        j.HasKey(ce => ce.Id); // Klucz główny
-                        j.Property(ce => ce.Id).ValueGeneratedOnAdd(); // Generowanie Id automatycznie
+                        j.HasKey(ce => ce.Id);
+                        j.Property(ce => ce.Id).ValueGeneratedOnAdd(); 
                     }
                 );
         }

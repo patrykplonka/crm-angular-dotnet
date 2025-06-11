@@ -49,7 +49,6 @@ public class CourseControllerTests
     [Fact]
     public async Task GetCourses_ReturnsOkWithEnrolledCourses()
     {
-        // Arrange
         var courses = new List<Course>
         {
             new Course { Id = "1", Title = "Test Course", Instructor = "user123" }
@@ -68,10 +67,8 @@ public class CourseControllerTests
         _mockContext.Object.CourseEnrollments = mockEnrollments.Object;
         _mockContext.Setup(m => m.SaveChangesAsync(default)).ReturnsAsync(1);
 
-        // Act
         var result = await _controller.GetCourses();
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var courseDtos = Assert.IsType<List<CourseDto>>(okResult.Value);
         Assert.Single(courseDtos);
